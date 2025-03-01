@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/news.dart';
 
 class NewsCard extends StatelessWidget {
   final News news;
   final VoidCallback onTap;
-
   NewsCard({required this.news, required this.onTap});
 
   @override
@@ -18,11 +18,13 @@ class NewsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(
-                news.imageUrl,
+              CachedNetworkImage(
+                imageUrl: news.imageUrl,
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                placeholder: (context, url) => CircularProgressIndicator(),
+                errorWidget: (context, url, error) => Icon(Icons.error),
               ),
               SizedBox(height: 8.0),
               Text(
@@ -40,4 +42,4 @@ class NewsCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

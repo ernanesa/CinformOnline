@@ -18,8 +18,7 @@ import 'core/utils/logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final appDocumentDir = await path_provider.getApplicationDocumentsDirectory();
-  Hive.init(appDocumentDir.path);
+  await Hive.initFlutter();
   Hive.registerAdapter(NewsModelAdapter());
   await Hive.openBox<NewsModel>('newsBox');
 

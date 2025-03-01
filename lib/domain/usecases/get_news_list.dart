@@ -8,17 +8,19 @@ class GetNewsList {
 
   GetNewsList(this.repository);
 
-  Future<List<News>> execute() async {
+  Future<List<News>> execute({int page = 1}) async {
     final response = await http.get(
       Uri.parse(
-        'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc',
+        'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page',
       ),
     );
     if (response.statusCode == 200) {
       final List<dynamic> newsJson = json.decode(response.body);
       return newsJson.map((json) => News.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to load news');
+      throw Exception(
+        'Failed to load news: ${response.statusCode} ${response.reasonPhrase}',
+      );
     }
   }
 }
