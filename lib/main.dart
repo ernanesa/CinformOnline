@@ -29,15 +29,17 @@ void main() async {
   final newsRemoteDataSource = NewsRemoteDataSource(apiClient: apiClient);
   final newsLocalDataSource = NewsLocalDataSource();
   final networkInfo = NetworkInfo(Connectivity());
-  final newsRepository = NewsRepositoryImpl(newsRemoteDataSource, newsLocalDataSource, networkInfo);
+  final newsRepository = NewsRepositoryImpl(
+    newsRemoteDataSource,
+    newsLocalDataSource,
+    networkInfo,
+  );
   final getNewsList = GetNewsList(newsRepository);
 
   runApp(
     MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => ThemeBloc(),
-        ),
+        BlocProvider(create: (context) => ThemeBloc()),
         BlocProvider(
           create: (context) => NewsListBloc(getNewsList)..add(LoadNewsList()),
         ),
@@ -79,9 +81,7 @@ class NewsHomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Text('Notícias em breve!'),
-      ),
+      body: Center(child: Text('Notícias em breve!')),
     );
   }
 }
