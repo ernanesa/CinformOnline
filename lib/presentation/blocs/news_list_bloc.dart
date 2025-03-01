@@ -7,6 +7,8 @@ abstract class NewsListEvent {}
 
 class LoadNewsList extends NewsListEvent {}
 
+class LoadMoreNews extends NewsListEvent {}
+
 // States
 abstract class NewsListState {
   final List<News> newsList;
@@ -46,5 +48,17 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
         emit(NewsListError(message: e.toString()));
       }
     });
+    on<LoadMoreNews>((event, emit) async {
+      if (state is NewsListLoaded) {
+        try {
+          final List<News> moreNews = await getNewsList.execute();
+          final List<News> updatedNewsList = List.from(state.newsList)
+            ..addAll(moreNews);
+          emit(NewsListLoaded(newsList: updatedNewsList));
+        } catch (e) {
+          emit(NewsListError(message: e.toString()));
+        }
+      }
+    });
   }
-} 
+}

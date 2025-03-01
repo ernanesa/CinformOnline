@@ -13,6 +13,17 @@ class News {
     required this.date,
   });
 
+  factory News.fromJson(Map<String, dynamic> json) {
+    return News(
+      id: json['id'] as int,
+      title: json['title']['rendered'] as String,
+      content: json['content']['rendered'] as String,
+      imageUrl:
+          json['_embedded']['wp:featuredmedia'][0]['source_url'] as String,
+      date: DateTime.parse(json['date'] as String),
+    );
+  }
+
   @override
   String toString() {
     return 'News{id: $id, title: $title, content: $content, imageUrl: $imageUrl, date: $date}';
@@ -36,4 +47,4 @@ class News {
       content.hashCode ^
       imageUrl.hashCode ^
       date.hashCode;
-} 
+}
