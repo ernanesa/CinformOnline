@@ -11,7 +11,6 @@ import 'data/repositories/news_repository_impl.dart';
 import 'domain/usecases/get_news_list.dart';
 import 'presentation/blocs/news_list_bloc.dart';
 import 'presentation/pages/news_list_page.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'data/models/news_model.dart';
 import 'core/utils/logger.dart';
