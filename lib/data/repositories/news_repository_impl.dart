@@ -1,9 +1,11 @@
-import 'package:cinform_online/core/network/network_info.dart';
+import 'package:cinform_online/core/error/failures.dart';
+import 'package:dartz/dartz.dart';
 import '../../domain/entities/news.dart';
 import '../../domain/repositories/news_repository.dart';
-import '../datasources/news_remote_data_source.dart';
 import '../datasources/news_local_data_source.dart';
+import '../datasources/news_remote_data_source.dart';
 import '../models/news_model.dart';
+import 'package:cinform_online/core/network/network_info.dart';
 
 class NewsRepositoryImpl implements NewsRepository {
   final NewsRemoteDataSource remoteDataSource;
@@ -17,29 +19,27 @@ class NewsRepositoryImpl implements NewsRepository {
   );
 
   @override
-  Future<List<News>> getNewsList() async {
+  Future<Either<Failure, List<News>>> getNewsList() async {
     if (await networkInfo.isConnected) {
       try {
-        final List<NewsModel> newsModels = await remoteDataSource.getNewsList();
-        localDataSource.cacheNews(newsModels); // Cache as notícias
-        return newsModels.map((model) => model.toEntity()).toList();
+        final remoteNews = await remoteDataSource.getNewsList();
+        await localDataSource.saveNews(remoteNews);
+        return Right(remoteNews.map((news) => news.toEntity()).toList());
       } catch (e) {
-        throw e;
+        return Left(ServerFailure());
       }
     } else {
-      // Se não houver conexão, busca do cache
-      final List<NewsModel> cachedNews = await localDataSource.getCachedNews();
-      if (cachedNews.isNotEmpty) {
-        return cachedNews.map((model) => model.toEntity()).toList();
-      } else {
-        throw Exception('No internet connection and no cached data');
+      try {
+        final localNews = localDataSource.getNews();
+        return Right(localNews.map((news) => news.toEntity()).toList());
+      } catch (e) {
+        return Left(CacheFailure());
       }
     }
   }
 
   @override
   Future<News> getNewsDetail(int id) async {
-    // Implemente a lógica de cache para detalhes da notícia, se necessário
     final NewsModel newsModel = await remoteDataSource.getNewsDetail(id);
     return newsModel.toEntity();
   }

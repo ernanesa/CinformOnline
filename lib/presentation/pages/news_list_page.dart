@@ -13,6 +13,7 @@ class NewsListPage extends StatefulWidget {
 
 class _NewsListPageState extends State<NewsListPage> {
   final ScrollController _scrollController = ScrollController();
+  bool _isFetching = false;
 
   @override
   void initState() {
@@ -22,13 +23,16 @@ class _NewsListPageState extends State<NewsListPage> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isFetching) {
+      _isFetching = true;
       BlocProvider.of<NewsListBloc>(context).add(LoadMoreNews());
     }
   }
@@ -52,6 +56,7 @@ class _NewsListPageState extends State<NewsListPage> {
           if (state is NewsListLoading) {
             return Center(child: CircularProgressIndicator());
           } else if (state is NewsListLoaded) {
+            _isFetching = false;
             return LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
                 if (constraints.maxWidth > 600) {
