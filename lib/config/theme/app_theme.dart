@@ -5,6 +5,7 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: Colors.blue,
     appBarTheme: AppBarTheme(
+      centerTitle: true,
       color: Colors.blue,
       iconTheme: IconThemeData(color: Colors.white),
     ),
@@ -23,6 +24,7 @@ class AppTheme {
     brightness: Brightness.dark,
     primaryColor: Colors.blueGrey,
     appBarTheme: AppBarTheme(
+      centerTitle: true,
       color: Colors.blueGrey,
       iconTheme: IconThemeData(color: Colors.white),
     ),
