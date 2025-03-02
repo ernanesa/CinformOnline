@@ -11,18 +11,18 @@ class AppLogger {
   }
 
   static void log(String message, {Level level = Level.INFO}) {
-    _logger.log(level, message);
+    _logger.log(level, 'Mensagem: ' + message);
   }
 
   static void info(String message) {
-    _logger.info(message);
+    _logger.info('Informação: ' + message);
   }
 
   static void warning(String message) {
-    _logger.warning(message);
+    _logger.warning('Aviso: ' + message);
   }
 
   static void severe(String message) {
-    _logger.severe(message);
+    _logger.severe('Erro grave: ' + message);
   }
-} 
+}
