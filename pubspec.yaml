@@ -40,7 +40,9 @@ dependencies:
   logging: ^1.0.0
   html_unescape: ^2.0.0
   dartz: ^0.10.0
-
+  flutter_widget_from_html_core: ^0.16.0
+  intl: ^0.17.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

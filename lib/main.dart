@@ -54,6 +54,7 @@ class MyApp extends StatelessWidget {
       builder: (context, state) {
         return MaterialApp(
           title: 'Cinform Online News',
+          debugShowCheckedModeBanner: false,
           theme: state.themeData,
           darkTheme: AppTheme.darkTheme,
           themeMode: state.themeMode,

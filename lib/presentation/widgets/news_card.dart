@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../domain/entities/news.dart';
 
 class NewsCard extends StatelessWidget {
@@ -9,6 +12,8 @@ class NewsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    initializeDateFormatting('pt_BR', null);
+    final formattedDate = DateFormat.yMMMd('pt_BR').format(news.date);
     return Card(
       margin: EdgeInsets.all(8.0),
       child: InkWell(
@@ -18,22 +23,28 @@ class NewsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CachedNetworkImage(
-                imageUrl: news.imageUrl,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => CircularProgressIndicator(),
-                errorWidget: (context, url, error) => Icon(Icons.error),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6.0),
+                child: CachedNetworkImage(
+                  imageUrl: news.imageUrl,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => CircularProgressIndicator(),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
+                ),
               ),
               SizedBox(height: 8.0),
-              Text(
+              HtmlWidget(
                 news.title,
-                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                textStyle: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: 4.0),
               Text(
-                '${news.date}',
+                formattedDate,
                 style: TextStyle(fontSize: 12.0, color: Colors.grey),
               ),
             ],
