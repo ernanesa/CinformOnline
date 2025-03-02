@@ -5,8 +5,8 @@ class ApiClient {
   final Dio dio = Dio(
     BaseOptions(
       baseUrl: 'https://cinformonline.com.br/wp-json/wp/v2',
-      connectTimeout: 5000, // 5 seconds in milliseconds
-      receiveTimeout: 5000, // 5 seconds in milliseconds
+      connectTimeout: const Duration(milliseconds: 5000),
+      receiveTimeout: const Duration(milliseconds: 3000),
       headers: {'Content-Type': 'application/json'},
     ),
   );
