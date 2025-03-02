@@ -43,4 +43,18 @@ class NewsRepositoryImpl implements NewsRepository {
     final NewsModel newsModel = await remoteDataSource.getNewsDetail(id);
     return newsModel.toEntity();
   }
+
+  @override
+  Future<List<String>> getCategories() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final remoteCategories = await remoteDataSource.getCategories();
+        return remoteCategories;
+      } on Exception {
+        throw ServerFailure();
+      }
+    } else {
+      throw CacheFailure();
+    }
+  }
 }

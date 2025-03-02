@@ -5,4 +5,5 @@ import '../entities/news.dart';
 abstract class NewsRepository {
   Future<Either<Failure, List<News>>> getNewsList();
   Future<News> getNewsDetail(int id);
+  Future<List<String>> getCategories();
 }

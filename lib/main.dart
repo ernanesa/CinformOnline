@@ -14,6 +14,7 @@ import 'presentation/pages/news_list_page.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'data/models/news_model.dart';
 import 'core/utils/logger.dart';
+import 'package:cinform_online/domain/usecases/get_categories.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,13 +34,14 @@ void main() async {
     networkInfo,
   );
   final getNewsList = GetNewsList(newsRepository);
+  final getCategories = GetCategories(newsRepository);
 
   runApp(
     MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => ThemeBloc()),
         BlocProvider(
-          create: (context) => NewsListBloc(getNewsList)..add(LoadNewsList()),
+          create: (context) => NewsListBloc(getNewsList, getCategories)..add(LoadNewsList()),
         ),
       ],
       child: MyApp(),

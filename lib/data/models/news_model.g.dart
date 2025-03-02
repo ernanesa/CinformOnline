@@ -23,13 +23,14 @@ class NewsModelAdapter extends TypeAdapter<NewsModel> {
       date: fields[3] as DateTime,
       imageUrl: fields[4] as String,
       imagePath: fields[5] as String?,
+      category: fields[6] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, NewsModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class NewsModelAdapter extends TypeAdapter<NewsModel> {
       ..writeByte(4)
       ..write(obj.imageUrl)
       ..writeByte(5)
-      ..write(obj.imagePath);
+      ..write(obj.imagePath)
+      ..writeByte(6)
+      ..write(obj.category);
   }
 
   @override

@@ -8,10 +8,11 @@ class GetNewsList {
 
   GetNewsList(this.repository);
 
-  Future<List<News>> execute({int page = 1}) async {
+  Future<List<News>> execute({int page = 1, String? category}) async {
+    final categoryFilter = category != null ? '&categories=$category' : '';
     final response = await http.get(
       Uri.parse(
-        'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page',
+        'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page$categoryFilter',
       ),
     );
     if (response.statusCode == 200) {

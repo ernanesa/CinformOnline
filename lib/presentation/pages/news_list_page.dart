@@ -14,11 +14,16 @@ class NewsListPage extends StatefulWidget {
 class _NewsListPageState extends State<NewsListPage> {
   final ScrollController _scrollController = ScrollController();
   bool _isFetching = false;
+  String? _selectedCategory;
+  final List<String> _categories = [];
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchCategories();
+    });
   }
 
   @override
@@ -37,6 +42,17 @@ class _NewsListPageState extends State<NewsListPage> {
     }
   }
 
+  void _fetchCategories() async {
+    final categories =
+        await BlocProvider.of<NewsListBloc>(context).fetchCategories();
+    if (mounted) {
+      setState(() {
+        _categories.clear(); // Clear existing categories before adding new ones
+        _categories.addAll(categories);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +65,55 @@ class _NewsListPageState extends State<NewsListPage> {
               BlocProvider.of<NewsListBloc>(context).add(LoadNewsList());
             },
           ),
+          DropdownButton<String>(
+            hint: Text('Select Category'),
+            value: _selectedCategory,
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedCategory = newValue;
+                BlocProvider.of<NewsListBloc>(
+                  context,
+                ).add(FilterNewsByCategory(newValue!));
+              });
+            },
+            items:
+                _categories.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+          ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(50.0),
+          child: Container(
+            height: 50.0,
+            alignment: Alignment.center,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: ChoiceChip(
+                    label: Text(category),
+                    selected: _selectedCategory == category,
+                    onSelected: (bool selected) {
+                      setState(() {
+                        _selectedCategory = selected ? category : null;
+                        BlocProvider.of<NewsListBloc>(
+                          context,
+                        ).add(FilterNewsByCategory(_selectedCategory!));
+                      });
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
       ),
       body: BlocBuilder<NewsListBloc, NewsListState>(
         builder: (context, state) {
