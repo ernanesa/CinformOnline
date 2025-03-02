@@ -54,7 +54,11 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
         final List<News> newsList = await getNewsList.execute(page: event.page);
         emit(NewsListLoaded(newsList: newsList));
       } catch (e) {
-        emit(NewsListError(message: e.toString()));
+        emit(
+          NewsListError(
+            message: 'Erro ao carregar a lista de notícias: ' + e.toString(),
+          ),
+        );
       }
     });
 
@@ -74,7 +78,11 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
             ),
           );
         } catch (e) {
-          emit(NewsListError(message: e.toString()));
+          emit(
+            NewsListError(
+              message: 'Erro ao carregar a lista de notícias: ' + e.toString(),
+            ),
+          );
         }
       }
     });
