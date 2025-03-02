@@ -9,7 +9,11 @@ class NewsRemoteDataSource {
   NewsRemoteDataSource({required this.apiClient});
 
   Future<List<NewsModel>> getNewsList() async {
-    final response = await apiClient.get('/wp-json/wp/v2/posts?_embed&orderby=date&order=desc') as http.Response;
+    final response =
+        await apiClient.get(
+              '/wp-json/wp/v2/posts?_embed&orderby=date&order=desc',
+            )
+            as http.Response;
     if (response.statusCode == 200) {
       final List<dynamic> newsJson = json.decode(response.body);
       return newsJson.map((json) => NewsModel.fromJson(json)).toList();
@@ -19,12 +23,23 @@ class NewsRemoteDataSource {
   }
 
   Future<NewsModel> getNewsDetail(int id) async {
-    final response = await apiClient.get('/wp-json/wp/v2/posts/$id?_embed') as http.Response;
+    final response =
+        await apiClient.get('/wp-json/wp/v2/posts/$id?_embed') as http.Response;
     if (response.statusCode == 200) {
       return NewsModel.fromJson(json.decode(response.body));
     } else {
       throw Exception('Failed to load news detail');
     }
   }
-}
 
+  Future<List<String>> getCategories() async {
+    final response =
+        await apiClient.get('/wp-json/wp/v2/categories') as http.Response;
+    if (response.statusCode == 200) {
+      final List<dynamic> categoriesJson = json.decode(response.body);
+      return categoriesJson.map((json) => json['name'] as String).toList();
+    } else {
+      throw Exception('Failed to load categories');
+    }
+  }
+}

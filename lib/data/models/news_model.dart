@@ -18,6 +18,8 @@ class NewsModel {
   final String imageUrl;
   @HiveField(5)
   final String? imagePath;
+  @HiveField(6)
+  final String category;
 
   NewsModel({
     required this.id,
@@ -26,6 +28,7 @@ class NewsModel {
     required this.date,
     required this.imageUrl,
     this.imagePath,
+    required this.category,
   });
 
   factory NewsModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +40,7 @@ class NewsModel {
       date: DateTime.parse(json['date'] as String),
       imageUrl:
           json['_embedded']['wp:featuredmedia'][0]['source_url'] as String,
+      category: json['category'] as String,
     );
   }
 
@@ -47,6 +51,7 @@ class NewsModel {
       'content': {'rendered': content},
       'date': date.toIso8601String(),
       'imageUrl': imageUrl,
+      'category': category,
     };
   }
 
@@ -57,6 +62,7 @@ class NewsModel {
     DateTime? date,
     String? imageUrl,
     String? imagePath,
+    String? category,
   }) {
     return NewsModel(
       id: id ?? this.id,
@@ -65,6 +71,7 @@ class NewsModel {
       date: date ?? this.date,
       imageUrl: imageUrl ?? this.imageUrl,
       imagePath: imagePath ?? this.imagePath,
+      category: category ?? this.category,
     );
   }
 
@@ -80,7 +87,7 @@ class NewsModel {
 
   @override
   String toString() {
-    return 'NewsModel{id: $id, title: $title, content: $content, date: $date, imageUrl: $imageUrl, imagePath: $imagePath}';
+    return 'NewsModel{id: $id, title: $title, content: $content, date: $date, imageUrl: $imageUrl, imagePath: $imagePath, category: $category}';
   }
 
   @override
@@ -93,7 +100,8 @@ class NewsModel {
           content == other.content &&
           date == other.date &&
           imageUrl == other.imageUrl &&
-          imagePath == other.imagePath;
+          imagePath == other.imagePath &&
+          category == other.category;
 
   @override
   int get hashCode =>
@@ -102,5 +110,6 @@ class NewsModel {
       content.hashCode ^
       date.hashCode ^
       imageUrl.hashCode ^
-      imagePath.hashCode;
+      imagePath.hashCode ^
+      category.hashCode;
 }
