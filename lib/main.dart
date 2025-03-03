@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'config/theme/app_theme.dart';
-import 'presentation/blocs/theme_bloc.dart';
 import 'core/network/api_client.dart';
 import 'core/network/network_info.dart';
 import 'data/datasources/news_remote_data_source.dart';
@@ -59,7 +58,7 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.currentTheme,
-          home: NewsListPage(),
+          home: NewsHomePage(),
         );
       },
     );
@@ -70,18 +69,8 @@ class NewsHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Cinform Online News'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.brightness_4),
-            onPressed: () {
-              BlocProvider.of<ThemeBloc>(context).add(ThemeToggled());
-            },
-          ),
-        ],
-      ),
-      body: Center(child: Text('Notícias em breve!')),
+      // Removed the AppBar to avoid duplication
+      body: NewsListPage(),
     );
   }
 }
