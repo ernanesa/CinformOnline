@@ -23,21 +23,39 @@ class NewsRepositoryImpl implements NewsRepository {
     int page = 1,
     String? categoryName,
   }) async {
+    try {
+      final localNews =
+          await localDataSource.getNews(); // TENTAR LER DO CACHE PRIMEIRO
+      if (localNews.isNotEmpty) {
+        // SE CACHE NÃO ESTÁ VAZIO, RETORNAR CACHE
+        return Right(localNews.map((news) => news.toEntity()).toList());
+      }
+    } catch (e) {
+      // Erro ao acessar o cache (ignorar e tentar buscar da rede)
+      print(
+        'Warning: Error accessing local cache, proceeding to fetch from network: $e',
+      );
+    }
+
+    // CACHE VAZIO OU ERRO AO ACESSAR CACHE, TENTAR BUSCAR DA API REMOTA
     if (await networkInfo.isConnected) {
       try {
         final remoteNews = await remoteDataSource.getNewsList();
-        await localDataSource.saveNews(remoteNews);
+        await localDataSource.saveNews(
+          remoteNews,
+        ); // SALVAR NO CACHE APÓS BUSCAR DA API
         return Right(remoteNews.map((news) => news.toEntity()).toList());
       } catch (e) {
         return Left(ServerFailure());
       }
     } else {
-      try {
-        final localNews = localDataSource.getNews();
-        return Right(localNews.map((news) => news.toEntity()).toList());
-      } catch (e) {
-        return Left(CacheFailure());
-      }
+      // Se não há rede E cache está vazio (ou falhou), retornar falha de cache
+      return Left(
+        CacheFailure(
+          message:
+              'No internet connection and no cached data available. Please connect to the internet to load news.',
+        ),
+      );
     }
   }
 
@@ -57,7 +75,10 @@ class NewsRepositoryImpl implements NewsRepository {
         throw ServerFailure();
       }
     } else {
-      throw CacheFailure();
+      throw CacheFailure(
+        message:
+            'No internet connection and no cached data available. Please connect to the internet to load news.',
+      );
     }
   }
 }
