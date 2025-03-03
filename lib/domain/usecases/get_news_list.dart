@@ -7,10 +7,14 @@ import '../../core/error/failures.dart';
 
 class GetNewsList {
   final NewsRepository repository;
+  final Map<String, int> _categoryCache = {};
 
   GetNewsList(this.repository);
 
   Future<int?> _getCategoryIdByName(String categoryName) async {
+    if (_categoryCache.containsKey(categoryName)) {
+      return _categoryCache[categoryName];
+    }
     print(
       'Debug: Iniciando _getCategoryIdByName para categoria: $categoryName',
     );
@@ -24,6 +28,7 @@ class GetNewsList {
           print(
             'Debug: Categoria encontrada: ${category['name']}, ID: ${category['id']}',
           );
+          _categoryCache[categoryName] = category['id'];
           return category['id'];
         }
       }
