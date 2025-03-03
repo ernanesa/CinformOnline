@@ -22,6 +22,16 @@ class NewsModel {
 
   factory NewsModel.fromJson(Map<String, dynamic> json) {
     final unescape = HtmlUnescape();
+    String category = json['category'] as String;
+    if (category == 'Uncategorized') {
+      final title =
+          unescape.convert(json['title']['rendered'] as String).toLowerCase();
+      if (title.contains('aracaju') || title.contains('sergipe')) {
+        category = 'Aracaju';
+      } else if (title.contains('brasil') || title.contains('brazil')) {
+        category = 'Brasil';
+      }
+    }
     return NewsModel(
       id: json['id'] as int,
       title: unescape.convert(json['title']['rendered'] as String),
@@ -29,7 +39,7 @@ class NewsModel {
       date: DateTime.parse(json['date'] as String),
       imageUrl:
           json['_embedded']['wp:featuredmedia'][0]['source_url'] as String,
-      category: json['category'] as String,
+      category: category,
     );
   }
 
