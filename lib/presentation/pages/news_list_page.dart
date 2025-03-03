@@ -59,31 +59,12 @@ class _NewsListPageState extends State<NewsListPage> {
       appBar: AppBar(
         title: Text('Cinform Online News'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () {
-              BlocProvider.of<NewsListBloc>(context).add(LoadNewsList());
-            },
-          ),
-          DropdownButton<String>(
-            hint: Text('Select Category'),
-            value: _selectedCategory,
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedCategory = newValue;
-                BlocProvider.of<NewsListBloc>(
-                  context,
-                ).add(FilterNewsByCategory(newValue!));
-              });
-            },
-            items:
-                _categories.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-          ),
+          // IconButton(
+          //   icon: Icon(Icons.refresh),
+          //   onPressed: () {
+          //     BlocProvider.of<NewsListBloc>(context).add(LoadNewsList());
+          //   },
+          // ),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(50.0),
