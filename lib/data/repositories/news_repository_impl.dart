@@ -19,7 +19,10 @@ class NewsRepositoryImpl implements NewsRepository {
   );
 
   @override
-  Future<Either<Failure, List<News>>> getNewsList() async {
+  Future<Either<Failure, List<News>>> getNewsList({
+    int page = 1,
+    String? categoryName,
+  }) async {
     if (await networkInfo.isConnected) {
       try {
         final remoteNews = await remoteDataSource.getNewsList();

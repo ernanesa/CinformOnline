@@ -58,32 +58,42 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
     : super(NewsListInitial()) {
     on<LoadNewsList>((event, emit) async {
       emit(NewsListLoading());
-      try {
-        final List<News> newsList = await getNewsList.execute(page: event.page);
-        emit(NewsListLoaded(newsList: newsList));
-      } catch (e) {
-        emit(
+      final result = await getNewsList.execute();
+      result.fold(
+        (failure) => emit(
           NewsListError(
-            message: 'Erro ao carregar a lista de notícias: ' + e.toString(),
+            message:
+                'Erro ao carregar a lista de notícias: ' + failure.toString(),
           ),
-        );
-      }
+        ),
+        (newsList) => emit(NewsListLoaded(newsList: newsList)),
+      );
     });
 
     on<LoadMoreNews>((event, emit) async {
       if (state is NewsListLoaded) {
         try {
-          final List<News> moreNews = await getNewsList.execute(
+          final result = await getNewsList.execute(
             page: event.page,
           );
-          final bool hasReachedMax = moreNews.isEmpty;
-          final List<News> updatedNewsList = List.of(state.newsList)
-            ..addAll(moreNews);
-          emit(
-            NewsListLoaded(
-              newsList: updatedNewsList,
-              hasReachedMax: hasReachedMax,
+          result.fold(
+            (failure) => emit(
+              NewsListError(
+                message: 'Erro ao carregar a lista de notícias: ' + failure.toString(),
+              ),
             ),
+            (moreNews) {
+              final bool hasReachedMax = moreNews.isEmpty;
+              final List<News> updatedNewsList = List.of(
+                (state as NewsListLoaded).newsList,
+              )..addAll(moreNews);
+              emit(
+                NewsListLoaded(
+                  newsList: updatedNewsList,
+                  hasReachedMax: hasReachedMax,
+                ),
+              );
+            },
           );
         } catch (e) {
           emit(
@@ -98,10 +108,17 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
     on<FilterNewsByCategory>((event, emit) async {
       emit(NewsListLoading());
       try {
-        final List<News> filteredNewsList = await getNewsList.execute(
+        final result = await getNewsList.execute(
           categoryName: event.category,
         );
-        emit(NewsListLoaded(newsList: filteredNewsList));
+        result.fold(
+          (failure) => emit(
+            NewsListError(
+              message: 'Erro ao filtrar a lista de notícias: ' + failure.toString(),
+            ),
+          ),
+          (filteredNewsList) => emit(NewsListLoaded(newsList: filteredNewsList)),
+        );
       } catch (e) {
         emit(
           NewsListError(
