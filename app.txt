@@ -1,0 +1,1350 @@
+import 'package:flutter/material.dart';
+
+class AppTheme {
+  static ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
+    primaryColor: Colors.blue,
+    appBarTheme: AppBarTheme(
+      centerTitle: true,
+      color: Colors.blue,
+      iconTheme: IconThemeData(color: Colors.black), // Cor para tema CLARO
+    ),
+    buttonTheme: ButtonThemeData(
+      buttonColor: Colors.blue,
+      textTheme: ButtonTextTheme.primary,
+    ),
+    textTheme: TextTheme(
+      bodyLarge: TextStyle(color: Colors.black),
+      bodyMedium: TextStyle(color: Colors.black54),
+    ),
+    // Add more customization as needed
+  );
+
+  static ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    primaryColor: Colors.blueGrey,
+    appBarTheme: AppBarTheme(
+      centerTitle: true,
+      color: Colors.blueGrey,
+      iconTheme: IconThemeData(color: Colors.white), // Cor para tema ESCURO
+    ),
+    buttonTheme: ButtonThemeData(
+      buttonColor: Colors.blueGrey,
+      textTheme: ButtonTextTheme.primary,
+    ),
+    textTheme: TextTheme(
+      bodyLarge: TextStyle(color: Colors.white),
+      bodyMedium: TextStyle(color: Colors.white70),
+    ),
+    // Add more customization as needed
+  );
+}
+import 'package:dio/dio.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
+class ApiClient {
+  final Dio dio = Dio(
+    BaseOptions(
+      baseUrl: 'https://cinformonline.com.br/wp-json/wp/v2',
+      connectTimeout: const Duration(milliseconds: 5000),
+      receiveTimeout: const Duration(milliseconds: 3000),
+      headers: {'Content-Type': 'application/json'},
+    ),
+  );
+
+  ApiClient() {
+    dio.interceptors.add(
+      LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        requestHeader: true,
+      ),
+    );
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    if (!await _isOnline()) {
+      throw Exception('Sem conexão com a internet');
+    }
+  }
+
+  Future<bool> _isOnline() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    return connectivityResult != ConnectivityResult.none;
+  }
+
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    if (!await _isOnline()) {
+      throw Exception('Sem conexão com a internet');
+    }
+    try {
+      final response = await dio.get(path, queryParameters: queryParameters);
+      return response;
+    } catch (e) {
+      throw e;
+    }
+  }
+}
+import 'package:connectivity_plus/connectivity_plus.dart';
+
+class NetworkInfo {
+  final Connectivity connectivity;
+
+  NetworkInfo(this.connectivity);
+
+  Future<bool> get isConnected async {
+    final connectivityResult = await connectivity.checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
+} import 'package:logging/logging.dart';
+
+class AppLogger {
+  static final _logger = Logger('MyApp');
+
+  static void init() {
+    Logger.root.level = Level.ALL; // Defaults to Level.INFO
+    Logger.root.onRecord.listen((record) {
+      print('${record.level.name}: ${record.time}: ${record.message}');
+    });
+  }
+
+  static void log(String message, {Level level = Level.INFO}) {
+    _logger.log(level, 'Mensagem: ' + message);
+  }
+
+  static void info(String message) {
+    _logger.info('Informação: ' + message);
+  }
+
+  static void warning(String message) {
+    _logger.warning('Aviso: ' + message);
+  }
+
+  static void severe(String message) {
+    _logger.severe('Erro grave: ' + message);
+  }
+}
+import 'package:flutter/material.dart';
+
+class ThemeProvider extends ChangeNotifier {
+  bool _isDarkMode = false;
+
+  bool get isDarkMode => _isDarkMode;
+
+  void toggleTheme(bool isDarkMode) {
+    _isDarkMode = isDarkMode;
+    notifyListeners();
+  }
+
+  ThemeMode get currentTheme => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+}
+abstract class Failure {}
+
+class ServerFailure extends Failure {}
+
+class CacheFailure extends Failure {
+  final String message;
+
+  CacheFailure({required this.message});
+}
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import '../models/news_model.dart';
+
+class NewsLocalDataSource {
+  final Dio dio = Dio();
+  Database? _database;
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDatabase();
+    return _database!;
+  }
+
+  Future<Database> _initDatabase() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final path = join(directory.path, 'news_database.db');
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) {
+        return db.execute(
+          'CREATE TABLE news(id INTEGER PRIMARY KEY, title TEXT, content TEXT, date TEXT, imageUrl TEXT, imagePath TEXT, category TEXT)',
+        );
+      },
+    );
+  }
+
+  Future<void> saveNews(List<NewsModel> newsList) async {
+    final db = await database;
+    List<Future<String>> imageDownloadFutures = [];
+
+    for (var news in newsList) {
+      imageDownloadFutures.add(_downloadImage(news.imageUrl));
+    }
+
+    final List<String> imagePaths = await Future.wait(imageDownloadFutures);
+
+    await db.transaction((txn) async {
+      for (int i = 0; i < newsList.length; i++) {
+        final updatedNews = newsList[i].copyWith(imagePath: imagePaths[i]);
+        await txn.insert(
+          'news',
+          updatedNews.toJson(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+  }
+
+  Future<List<NewsModel>> getNews() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('news');
+    return List.generate(maps.length, (i) {
+      return NewsModel(
+        id: maps[i]['id'],
+        title: maps[i]['title'],
+        content: maps[i]['content'],
+        date: DateTime.parse(maps[i]['date']),
+        imageUrl: maps[i]['imageUrl'],
+        imagePath: maps[i]['imagePath'],
+        category: maps[i]['category'],
+      );
+    });
+  }
+
+  Future<String> _downloadImage(String imageUrl) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/${imageUrl.split('/').last}';
+      final response = await dio.download(imageUrl, filePath);
+      if (response.statusCode == 200) {
+        return filePath;
+      } else {
+        throw Exception('Failed to download image');
+      }
+    } catch (e) {
+      throw Exception('Failed to download image: $e');
+    }
+  }
+}
+import 'package:cinform_online/core/network/api_client.dart';
+import 'package:cinform_online/data/models/news_model.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class NewsRemoteDataSource {
+  final ApiClient apiClient;
+
+  NewsRemoteDataSource({required this.apiClient});
+
+  Future<List<NewsModel>> getNewsList() async {
+    final response =
+        await apiClient.get(
+              '/wp-json/wp/v2/posts?_embed&orderby=date&order=desc',
+            )
+            as http.Response;
+    if (response.statusCode == 200) {
+      final List<dynamic> newsJson = json.decode(response.body);
+      return newsJson.map((json) => NewsModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load news');
+    }
+  }
+
+  Future<NewsModel> getNewsDetail(int id) async {
+    final response =
+        await apiClient.get('/wp-json/wp/v2/posts/$id?_embed') as http.Response;
+    if (response.statusCode == 200) {
+      return NewsModel.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load news detail');
+    }
+  }
+
+  Future<List<String>> getCategories() async {
+    final response =
+        await apiClient.get('/wp-json/wp/v2/categories') as http.Response;
+    if (response.statusCode == 200) {
+      final List<dynamic> categoriesJson = json.decode(response.body);
+      return categoriesJson.map((json) => json['name'] as String).toList();
+    } else {
+      throw Exception('Failed to load categories');
+    }
+  }
+}
+import 'package:html_unescape/html_unescape.dart';
+import '../../domain/entities/news.dart';
+
+class NewsModel {
+  final int id;
+  final String title;
+  final String content;
+  final DateTime date;
+  final String imageUrl;
+  final String? imagePath;
+  final String category;
+
+  NewsModel({
+    required this.id,
+    required this.title,
+    required this.content,
+    required this.date,
+    required this.imageUrl,
+    this.imagePath,
+    required this.category,
+  });
+
+  factory NewsModel.fromJson(Map<String, dynamic> json) {
+    final unescape = HtmlUnescape();
+    String category = json['category'] as String;
+    if (category.toLowerCase() == 'uncategorized') {
+      final title =
+          unescape.convert(json['title']['rendered'] as String).toLowerCase();
+      if (title.contains('aracaju') || title.contains('sergipe')) {
+        category = 'Aracaju';
+      } else if (title.contains('brasil') || title.contains('brazil')) {
+        category = 'Brasil';
+      }
+    }
+    return NewsModel(
+      id: json['id'] as int,
+      title: unescape.convert(json['title']['rendered'] as String),
+      content: unescape.convert(json['content']['rendered'] as String),
+      date: DateTime.parse(json['date'] as String),
+      imageUrl:
+          json['_embedded']['wp:featuredmedia'] != null
+              ? json['_embedded']['wp:featuredmedia'][0]['source_url'] as String
+              : '',
+      imagePath: null,
+      category: category,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': {'rendered': title},
+      'content': {'rendered': content},
+      'date': date.toIso8601String(),
+      'imageUrl': imageUrl,
+      'category': category,
+    };
+  }
+
+  NewsModel copyWith({
+    int? id,
+    String? title,
+    String? content,
+    DateTime? date,
+    String? imageUrl,
+    String? imagePath,
+    String? category,
+  }) {
+    return NewsModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      date: date ?? this.date,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imagePath: imagePath ?? this.imagePath,
+      category: category ?? this.category,
+    );
+  }
+
+  News toEntity() {
+    return News(
+      id: id,
+      title: title,
+      content: content,
+      date: date,
+      imageUrl: imageUrl,
+      category: category,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'NewsModel{id: $id, title: $title, content: $content, date: $date, imageUrl: $imageUrl, imagePath: $imagePath, category: $category}';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NewsModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          title == other.title &&
+          content == other.content &&
+          date == other.date &&
+          imageUrl == other.imageUrl &&
+          imagePath == other.imagePath &&
+          category == other.category;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      title.hashCode ^
+      content.hashCode ^
+      date.hashCode ^
+      imageUrl.hashCode ^
+      imagePath.hashCode ^
+      category.hashCode;
+}
+import 'package:cinform_online/core/error/failures.dart';
+import 'package:dartz/dartz.dart';
+import '../../domain/entities/news.dart';
+import '../../domain/repositories/news_repository.dart';
+import '../datasources/news_local_data_source.dart';
+import '../datasources/news_remote_data_source.dart';
+import '../models/news_model.dart';
+import 'package:cinform_online/core/network/network_info.dart';
+
+class NewsRepositoryImpl implements NewsRepository {
+  final NewsRemoteDataSource remoteDataSource;
+  final NewsLocalDataSource localDataSource;
+  final NetworkInfo networkInfo;
+
+  NewsRepositoryImpl(
+    this.remoteDataSource,
+    this.localDataSource,
+    this.networkInfo,
+  );
+
+  @override
+  Future<Either<Failure, List<News>>> getNewsList({
+    int page = 1,
+    String? categoryName,
+  }) async {
+    try {
+      final localNews = await localDataSource.getNews();
+      if (localNews.isNotEmpty) {
+        return Right(localNews.map((news) => news.toEntity()).toList());
+      }
+    } catch (e) {
+      print(
+        'Warning: Error accessing local cache, proceeding to fetch from network: $e',
+      );
+    }
+    if (await networkInfo.isConnected) {
+      try {
+        final remoteNews = await remoteDataSource.getNewsList();
+        await localDataSource.saveNews(remoteNews);
+        return Right(remoteNews.map((news) => news.toEntity()).toList());
+      } catch (e) {
+        return Left(ServerFailure());
+      }
+    } else {
+      return Left(
+        CacheFailure(
+          message:
+              'No internet connection and no cached data available. Please connect to the internet to load news.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<News> getNewsDetail(int id) async {
+    final NewsModel newsModel = await remoteDataSource.getNewsDetail(id);
+    return newsModel.toEntity();
+  }
+
+  @override
+  Future<List<String>> getCategories() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final remoteCategories = await remoteDataSource.getCategories();
+        return remoteCategories;
+      } on Exception {
+        throw ServerFailure();
+      }
+    } else {
+      throw CacheFailure(
+        message:
+            'No internet connection and no cached data available. Please connect to the internet to load news.',
+      );
+    }
+  }
+}
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+
+class DatabaseHelper {
+  static final DatabaseHelper _instance = DatabaseHelper._internal();
+  factory DatabaseHelper() => _instance;
+  DatabaseHelper._internal();
+
+  static Database? _database;
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDatabase();
+    return _database!;
+  }
+
+  Future<Database> _initDatabase() async {
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String path = join(documentsDirectory.path, 'news_database.db');
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute(
+          'CREATE TABLE news (id INTEGER PRIMARY KEY, title TEXT, content TEXT, date TEXT, imageUrl TEXT, imagePath TEXT, category TEXT)',
+        );
+      },
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getNews() async {
+    final db = await database;
+    return await db.query('news');
+  }
+
+  Future<void> close() async {
+    final db = await database;
+    db.close();
+  }
+}
+class News {
+  final int id;
+  final String title;
+  final String content;
+  final String imageUrl;
+  final DateTime date;
+  final String category;
+
+  News({
+    required this.id,
+    required this.title,
+    required this.content,
+    required this.imageUrl,
+    required this.date,
+    required this.category,
+  });
+
+  factory News.fromJson(Map<String, dynamic> json) {
+    return News(
+      id: json['id'] as int,
+      title: json['title']['rendered'] as String? ?? '',
+      content: json['content']['rendered'] as String? ?? '',
+      imageUrl:
+          json['_embedded']['wp:featuredmedia'] != null &&
+                  json['_embedded']['wp:featuredmedia'].isNotEmpty
+              ? json['_embedded']['wp:featuredmedia'][0]['source_url']
+                      as String? ??
+                  ''
+              : '',
+      date: DateTime.parse(json['date'] as String? ?? ''),
+      category: json['category'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'News{id: $id, title: $title, content: $content, imageUrl: $imageUrl, date: $date, category: $category}';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is News &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          title == other.title &&
+          content == other.content &&
+          imageUrl == other.imageUrl &&
+          date == other.date &&
+          category == other.category;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      title.hashCode ^
+      content.hashCode ^
+      imageUrl.hashCode ^
+      date.hashCode ^
+      category.hashCode;
+}
+import 'package:dartz/dartz.dart';
+import '../../core/error/failures.dart';
+import '../entities/news.dart';
+
+abstract class NewsRepository {
+  Future<Either<Failure, List<News>>> getNewsList();
+  Future<News> getNewsDetail(int id);
+  Future<List<String>> getCategories();
+}
+import '../repositories/news_repository.dart';
+
+class GetCategories {
+  final NewsRepository repository;
+
+  GetCategories(this.repository);
+
+  Future<List<String>> execute() async {
+    return await repository.getCategories();
+  }
+}
+import 'package:dartz/dartz.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../entities/news.dart';
+import '../repositories/news_repository.dart';
+import '../../core/error/failures.dart';
+
+class GetNewsList {
+  final NewsRepository repository;
+
+  GetNewsList(this.repository);
+
+  Future<int?> _getCategoryIdByName(String categoryName) async {
+    print(
+      'Debug: Iniciando _getCategoryIdByName para categoria: $categoryName',
+    );
+    final response = await http.get(
+      Uri.parse('https://cinformonline.com.br/wp-json/wp/v2/categories'),
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> categoriesJson = json.decode(response.body);
+      for (var category in categoriesJson) {
+        if (category['name'] == categoryName) {
+          print(
+            'Debug: Categoria encontrada: ${category['name']}, ID: ${category['id']}',
+          );
+          return category['id'];
+        }
+      }
+      print(
+        'Debug: Categoria "$categoryName" NÃO ENCONTRADA na API de categorias.',
+      );
+      return null; // Categoria não encontrada
+    } else {
+      print(
+        'Debug: ERRO ao buscar categorias para encontrar ID de "$categoryName". Status code: ${response.statusCode}',
+      );
+      throw Exception(
+        'Failed to load categories: ${response.statusCode} ${response.reasonPhrase}',
+      );
+    }
+  }
+
+  Future<Either<Failure, List<News>>> execute({
+    int page = 1,
+    String? categoryName,
+  }) async {
+    try {
+      int? categoryId;
+      if (categoryName != null) {
+        categoryId = await _getCategoryIdByName(categoryName);
+        if (categoryId == null) {
+          return Left(ServerFailure());
+        }
+      }
+      final categoryFilter =
+          categoryId != null ? '&categories=$categoryId' : '';
+      final url =
+          'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page$categoryFilter';
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final List<dynamic> newsJson = json.decode(response.body);
+        final newsList = newsJson.map((json) => News.fromJson(json)).toList();
+        return Right(newsList);
+      } else {
+        return Left(ServerFailure());
+      }
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+}
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/news.dart';
+
+class NewsDetailCubit extends Cubit<News> {
+  NewsDetailCubit(News initialState) : super(initialState);
+
+  void setNews(News news) {
+    emit(news);
+  }
+} import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cinform_online/config/theme/app_theme.dart';
+
+// Eventos
+abstract class ThemeEvent {}
+
+class ThemeToggled extends ThemeEvent {}
+
+// Estados
+class ThemeState {
+  final ThemeData themeData;
+  final ThemeMode themeMode;
+
+  ThemeState({required this.themeData, required this.themeMode});
+}
+
+// Bloc
+class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
+  ThemeBloc()
+    : super(
+        ThemeState(themeData: AppTheme.lightTheme, themeMode: ThemeMode.light),
+      ) {
+    on<ThemeToggled>((event, emit) {
+      if (state.themeMode == ThemeMode.light) {
+        emit(
+          ThemeState(themeData: AppTheme.darkTheme, themeMode: ThemeMode.dark),
+        );
+      } else {
+        emit(
+          ThemeState(
+            themeData: AppTheme.lightTheme,
+            themeMode: ThemeMode.light,
+          ),
+        );
+      }
+    });
+  }
+}
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/news.dart';
+import '../../domain/usecases/get_news_list.dart';
+import '../../domain/usecases/get_categories.dart';
+
+// Events
+abstract class NewsListEvent {}
+
+class LoadNewsList extends NewsListEvent {
+  final int page;
+  LoadNewsList({this.page = 1});
+}
+
+class LoadMoreNews extends NewsListEvent {
+  final int page;
+  LoadMoreNews({this.page = 1});
+}
+
+class FilterNewsByCategory extends NewsListEvent {
+  final String category;
+  FilterNewsByCategory(this.category);
+}
+
+// States
+abstract class NewsListState {
+  final List<News> newsList;
+  final bool hasReachedMax;
+
+  NewsListState({required this.newsList, this.hasReachedMax = false});
+}
+
+class NewsListInitial extends NewsListState {
+  NewsListInitial() : super(newsList: []);
+}
+
+class NewsListLoading extends NewsListState {
+  NewsListLoading() : super(newsList: []);
+}
+
+class NewsListLoaded extends NewsListState {
+  NewsListLoaded({required List<News> newsList, bool hasReachedMax = false})
+    : super(newsList: newsList, hasReachedMax: hasReachedMax);
+}
+
+class NewsListError extends NewsListState {
+  final String message;
+
+  NewsListError({required this.message}) : super(newsList: []);
+}
+
+// Bloc
+class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
+  final GetNewsList getNewsList;
+  final GetCategories getCategories;
+  int currentPage = 1;
+
+  NewsListBloc(this.getNewsList, this.getCategories)
+    : super(NewsListInitial()) {
+    on<LoadNewsList>((event, emit) async {
+      emit(NewsListLoading());
+      final result = await getNewsList.execute();
+      result.fold(
+        (failure) => emit(
+          NewsListError(
+            message:
+                'Erro ao carregar a lista de notícias: ' + failure.toString(),
+          ),
+        ),
+        (newsList) {
+          newsList.sort((a, b) => b.date.compareTo(a.date)); // Sort by date
+          emit(NewsListLoaded(newsList: newsList));
+        },
+      );
+    });
+
+    on<LoadMoreNews>((event, emit) async {
+      if (state is NewsListLoaded) {
+        try {
+          final result = await getNewsList.execute(page: event.page);
+          result.fold(
+            (failure) => emit(
+              NewsListError(
+                message:
+                    'Erro ao carregar a lista de notícias: ' +
+                    failure.toString(),
+              ),
+            ),
+            (moreNews) {
+              final bool hasReachedMax = moreNews.isEmpty;
+              final List<News> updatedNewsList = List.of(
+                (state as NewsListLoaded).newsList,
+              )..addAll(moreNews);
+              emit(
+                NewsListLoaded(
+                  newsList: updatedNewsList,
+                  hasReachedMax: hasReachedMax,
+                ),
+              );
+            },
+          );
+        } catch (e) {
+          emit(
+            NewsListError(
+              message: 'Erro ao carregar a lista de notícias: ' + e.toString(),
+            ),
+          );
+        }
+      }
+    });
+
+    on<FilterNewsByCategory>((event, emit) async {
+      emit(NewsListLoading());
+      try {
+        final result = await getNewsList.execute(categoryName: event.category);
+        result.fold(
+          (failure) => emit(
+            NewsListError(
+              message:
+                  'Erro ao filtrar a lista de notícias: ' + failure.toString(),
+            ),
+          ),
+          (filteredNewsList) {
+            filteredNewsList.sort(
+              (a, b) => b.date.compareTo(a.date),
+            ); // Sort by date
+            emit(NewsListLoaded(newsList: filteredNewsList));
+          },
+        );
+      } catch (e) {
+        emit(
+          NewsListError(
+            message: 'Erro ao filtrar a lista de notícias: ' + e.toString(),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<List<String>> fetchCategories() async {
+    try {
+      return await getCategories.execute();
+    } catch (e) {
+      print('Error fetching categories: $e');
+      return [];
+    }
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import '../blocs/news_detail_cubit.dart'; // Importe o NewsDetailCubit
+
+class NewsDetailPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final news =
+        context.watch<NewsDetailCubit>().state; // Obtenha o estado do Cubit
+    initializeDateFormatting('pt_BR', null);
+    final formattedDate = DateFormat.yMMMd('pt_BR').format(news.date);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Notícias Cinform Online'), centerTitle: true),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CachedNetworkImage(
+              imageUrl: news.imageUrl,
+              placeholder: (context, url) => CircularProgressIndicator(),
+              errorWidget: (context, url, error) => Icon(Icons.error),
+            ),
+            SizedBox(height: 16.0),
+            HtmlWidget(
+              news.title,
+              textStyle: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8.0),
+            Text(
+              formattedDate,
+              style: TextStyle(fontSize: 14.0, color: Colors.grey),
+            ),
+            SizedBox(height: 16.0),
+            HtmlWidget(news.content, textStyle: TextStyle(fontSize: 16.0)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async';
+import '../blocs/news_list_bloc.dart';
+import '../../domain/entities/news.dart';
+import 'news_detail_page.dart';
+import '../widgets/news_card.dart';
+import '../blocs/news_detail_cubit.dart';
+import 'news_search_delegate.dart';
+import 'settings_page.dart';
+
+class NewsListPage extends StatefulWidget {
+  @override
+  _NewsListPageState createState() => _NewsListPageState();
+}
+
+class _NewsListPageState extends State<NewsListPage>
+    with SingleTickerProviderStateMixin {
+  final ScrollController _scrollController = ScrollController();
+  bool _isFetching = false;
+  final List<String> _categories = ['Últimas Notícias', 'BRASIL', 'ARACAJU'];
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _tabController = TabController(length: _categories.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isFetching) {
+      _isFetching = true;
+      BlocProvider.of<NewsListBloc>(context).add(LoadMoreNews());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: _categories.length,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Cinform Online News'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.search), // ✅ SEM color: definido aqui
+              onPressed: () {
+                showSearch(context: context, delegate: NewsSearchDelegate());
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.settings), // ✅ SEM color: definido aqui
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
+              },
+            ),
+          ],
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: _categories.map((category) => Tab(text: category)).toList(),
+            onTap: (index) {
+              String selectedCategoryName = _categories[index];
+              if (selectedCategoryName == 'Últimas Notícias') {
+                BlocProvider.of<NewsListBloc>(
+                  context,
+                ).add(LoadNewsList()); // Load all news
+              } else {
+                BlocProvider.of<NewsListBloc>(context).add(
+                  FilterNewsByCategory(selectedCategoryName),
+                ); // Filter by category
+              }
+            },
+          ),
+        ),
+        body: TabBarView(
+          controller: _tabController,
+          children:
+              _categories.map((category) {
+                return BlocBuilder<NewsListBloc, NewsListState>(
+                  builder: (context, state) {
+                    if (state is NewsListLoading) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (state is NewsListLoaded) {
+                      _isFetching = false;
+                      final filteredNewsList = state.newsList;
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          final Completer<void> completer = Completer<void>();
+                          BlocProvider.of<NewsListBloc>(
+                            context,
+                          ).add(LoadNewsList());
+                          await Future.delayed(Duration(seconds: 1));
+                          completer.complete();
+                          return completer.future;
+                        },
+                        child: LayoutBuilder(
+                          builder: (
+                            BuildContext context,
+                            BoxConstraints constraints,
+                          ) {
+                            if (constraints.maxWidth > 600) {
+                              return GridView.builder(
+                                controller: _scrollController,
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio: 0.8,
+                                    ),
+                                itemCount: filteredNewsList.length,
+                                itemBuilder: (context, index) {
+                                  final News news = filteredNewsList[index];
+                                  return NewsCard(
+                                    news: news,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => BlocProvider(
+                                                create:
+                                                    (context) =>
+                                                        NewsDetailCubit(news),
+                                                child: NewsDetailPage(),
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            } else {
+                              return ListView.builder(
+                                controller: _scrollController,
+                                itemCount: filteredNewsList.length,
+                                itemBuilder: (context, index) {
+                                  final News news = filteredNewsList[index];
+                                  return NewsCard(
+                                    news: news,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => BlocProvider(
+                                                create:
+                                                    (context) =>
+                                                        NewsDetailCubit(news),
+                                                child: NewsDetailPage(),
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    } else if (state is NewsListError) {
+                      return Center(child: Text('Error: ${state.message}'));
+                    } else {
+                      return Center(child: Text('No news loaded'));
+                    }
+                  },
+                );
+              }).toList(),
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/news_list_bloc.dart';
+import '../../domain/entities/news.dart';
+import 'news_detail_page.dart';
+import '../widgets/news_card.dart';
+import '../blocs/news_detail_cubit.dart';
+
+class NewsSearchDelegate extends SearchDelegate<String> {
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return BlocBuilder<NewsListBloc, NewsListState>(
+      builder: (context, state) {
+        if (state is NewsListLoading) {
+          return Center(child: CircularProgressIndicator());
+        } else if (state is NewsListLoaded) {
+          final results =
+              state.newsList
+                  .where((news) => news.title.contains(query))
+                  .toList();
+          return ListView.builder(
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final News news = results[index];
+              return NewsCard(
+                news: news,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => BlocProvider(
+                            create: (context) => NewsDetailCubit(news),
+                            child: NewsDetailPage(),
+                          ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        } else if (state is NewsListError) {
+          return Center(child: Text('Error: ${state.message}'));
+        } else {
+          return Center(child: Text('No news found'));
+        }
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return Container();
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cinform_online/core/utils/theme_provider.dart';
+
+class SettingsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Settings')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Theme',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SwitchListTile(
+              title: Text('Dark Theme'),
+              value: Provider.of<ThemeProvider>(context).isDarkMode,
+              onChanged: (value) {
+                Provider.of<ThemeProvider>(
+                  context,
+                  listen: false,
+                ).toggleTheme(value);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import '../../domain/entities/news.dart';
+
+class NewsCard extends StatelessWidget {
+  final News news;
+  final VoidCallback onTap;
+  NewsCard({required this.news, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    initializeDateFormatting('pt_BR', null);
+    final formattedDate = DateFormat.yMMMd('pt_BR').format(news.date);
+    return Card(
+      margin: EdgeInsets.all(8.0),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6.0),
+                child: CachedNetworkImage(
+                  imageUrl: news.imageUrl,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => CircularProgressIndicator(),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
+                ),
+              ),
+              SizedBox(height: 8.0),
+              HtmlWidget(
+                news.title,
+                textStyle: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.0),
+              Text(
+                formattedDate,
+                style: TextStyle(fontSize: 12.0, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'config/theme/app_theme.dart';
+import 'presentation/blocs/theme_bloc.dart';
+import 'core/network/api_client.dart';
+import 'core/network/network_info.dart';
+import 'data/datasources/news_remote_data_source.dart';
+import 'data/datasources/news_local_data_source.dart';
+import 'data/repositories/news_repository_impl.dart';
+import 'domain/usecases/get_news_list.dart';
+import 'presentation/blocs/news_list_bloc.dart';
+import 'presentation/pages/news_list_page.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'core/utils/logger.dart';
+import 'package:cinform_online/domain/usecases/get_categories.dart';
+import 'package:provider/provider.dart';
+import 'core/utils/theme_provider.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  AppLogger.init();
+
+  final apiClient = ApiClient();
+  final newsRemoteDataSource = NewsRemoteDataSource(apiClient: apiClient);
+  final newsLocalDataSource = NewsLocalDataSource();
+  final networkInfo = NetworkInfo(Connectivity());
+  final newsRepository = NewsRepositoryImpl(
+    newsRemoteDataSource,
+    newsLocalDataSource,
+    networkInfo,
+  );
+  final getNewsList = GetNewsList(newsRepository);
+  final getCategories = GetCategories(newsRepository);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        BlocProvider(
+          create:
+              (context) =>
+                  NewsListBloc(getNewsList, getCategories)..add(LoadNewsList()),
+        ),
+      ],
+      child: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Cinform Online News',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.currentTheme,
+          home: NewsListPage(),
+        );
+      },
+    );
+  }
+}
+
+class NewsHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Cinform Online News'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.brightness_4),
+            onPressed: () {
+              BlocProvider.of<ThemeBloc>(context).add(ThemeToggled());
+            },
+          ),
+        ],
+      ),
+      body: Center(child: Text('Notícias em breve!')),
+    );
+  }
+}

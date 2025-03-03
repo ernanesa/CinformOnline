@@ -57,7 +57,6 @@ class GetNewsList {
           categoryId != null ? '&categories=$categoryId' : '';
       final url =
           'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page$categoryFilter';
-      print('Debug: URL da API de notícias (filtrada por categoria): $url');
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> newsJson = json.decode(response.body);

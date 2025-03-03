@@ -67,7 +67,6 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
           ),
         ),
         (newsList) {
-          newsList.sort((a, b) => b.date.compareTo(a.date)); // Sort by date
           emit(NewsListLoaded(newsList: newsList));
         },
       );
@@ -76,7 +75,9 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
     on<LoadMoreNews>((event, emit) async {
       if (state is NewsListLoaded) {
         try {
-          final result = await getNewsList.execute(page: event.page);
+          currentPage++; // Increment currentPage before fetching more news
+          print('Fetching more news...');
+          final result = await getNewsList.execute(page: currentPage);
           result.fold(
             (failure) => emit(
               NewsListError(
@@ -90,6 +91,7 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
               final List<News> updatedNewsList = List.of(
                 (state as NewsListLoaded).newsList,
               )..addAll(moreNews);
+              print('Fetched ${moreNews.length} more news items.');
               emit(
                 NewsListLoaded(
                   newsList: updatedNewsList,
@@ -120,9 +122,6 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
             ),
           ),
           (filteredNewsList) {
-            filteredNewsList.sort(
-              (a, b) => b.date.compareTo(a.date),
-            ); // Sort by date
             emit(NewsListLoaded(newsList: filteredNewsList));
           },
         );
