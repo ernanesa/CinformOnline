@@ -121,12 +121,24 @@ class _NewsListPageState extends State<NewsListPage>
                     } else if (state is NewsListLoaded) {
                       _isFetching = false;
                       final filteredNewsList = state.newsList;
+                      final currentCategoryIndex =
+                          _tabController.index; // ✅ OBTER ÍNDICE DA ABA ATIVA
+                      final selectedCategoryName =
+                          _categories[currentCategoryIndex]; // ✅ OBTER NOME DA CATEGORIA ATIVA
+
                       return RefreshIndicator(
                         onRefresh: () async {
                           final Completer<void> completer = Completer<void>();
-                          BlocProvider.of<NewsListBloc>(
-                            context,
-                          ).add(LoadNewsList());
+                          if (selectedCategoryName == 'Últimas Notícias') {
+                            // ✅ CONDICIONAL PARA DESPACHAR EVENTO CORRETO
+                            BlocProvider.of<NewsListBloc>(context).add(
+                              LoadNewsList(),
+                            ); // ✅ CARREGAR TODAS AS NOTÍCIAS PARA "Últimas Notícias"
+                          } else {
+                            BlocProvider.of<NewsListBloc>(context).add(
+                              FilterNewsByCategory(selectedCategoryName),
+                            ); // ✅ FILTRAR POR CATEGORIA PARA "Brasil" e "Aracaju"
+                          }
                           await Future.delayed(Duration(seconds: 1));
                           completer.complete();
                           return completer.future;
