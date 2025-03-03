@@ -20,10 +20,13 @@ class NewsLocalDataSource {
     return await openDatabase(
       path,
       version: 1,
-      onCreate: (db, version) {
-        return db.execute(
+      onCreate: (db, version) async {
+        await db.execute(
           'CREATE TABLE news(id INTEGER PRIMARY KEY, title TEXT, content TEXT, date TEXT, imageUrl TEXT, imagePath TEXT, category TEXT)',
         );
+        await db.execute(
+          'CREATE INDEX index_news_category ON news (category)',
+        ); // Add index on category column
       },
     );
   }
@@ -50,19 +53,20 @@ class NewsLocalDataSource {
     });
   }
 
-  Future<List<NewsModel>> getNews() async {
+  Future<List<NewsModel>> getNews({String? categoryName}) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('news');
-    return List.generate(maps.length, (i) {
-      return NewsModel(
-        id: maps[i]['id'],
-        title: maps[i]['title'],
-        content: maps[i]['content'],
-        date: DateTime.parse(maps[i]['date']),
-        imageUrl: maps[i]['imageUrl'],
-        imagePath: maps[i]['imagePath'],
-        category: maps[i]['category'],
+    List<Map<String, dynamic>> maps;
+    if (categoryName != null && categoryName.isNotEmpty) {
+      maps = await db.query(
+        'news',
+        where: 'category = ?',
+        whereArgs: [categoryName],
       );
+    } else {
+      maps = await db.query('news');
+    }
+    return List.generate(maps.length, (i) {
+      return NewsModel.fromJson(maps[i]);
     });
   }
 
