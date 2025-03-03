@@ -15,6 +15,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'data/models/news_model.dart';
 import 'core/utils/logger.dart';
 import 'package:cinform_online/domain/usecases/get_categories.dart';
+import 'package:provider/provider.dart';
+import 'core/utils/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,11 +39,13 @@ void main() async {
   final getCategories = GetCategories(newsRepository);
 
   runApp(
-    MultiBlocProvider(
+    MultiProvider(
       providers: [
-        BlocProvider(create: (context) => ThemeBloc()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         BlocProvider(
-          create: (context) => NewsListBloc(getNewsList, getCategories)..add(LoadNewsList()),
+          create:
+              (context) =>
+                  NewsListBloc(getNewsList, getCategories)..add(LoadNewsList()),
         ),
       ],
       child: MyApp(),
@@ -52,14 +56,14 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ThemeBloc, ThemeState>(
-      builder: (context, state) {
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
         return MaterialApp(
           title: 'Cinform Online News',
           debugShowCheckedModeBanner: false,
-          theme: state.themeData,
+          theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          themeMode: state.themeMode,
+          themeMode: themeProvider.currentTheme,
           home: NewsListPage(),
         );
       },
