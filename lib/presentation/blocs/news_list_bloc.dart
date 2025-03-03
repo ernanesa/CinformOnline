@@ -99,7 +99,7 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
       emit(NewsListLoading());
       try {
         final List<News> filteredNewsList = await getNewsList.execute(
-          category: event.category,
+          categoryName: event.category,
         );
         emit(NewsListLoaded(newsList: filteredNewsList));
       } catch (e) {

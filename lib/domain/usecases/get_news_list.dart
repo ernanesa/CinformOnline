@@ -8,13 +8,50 @@ class GetNewsList {
 
   GetNewsList(this.repository);
 
-  Future<List<News>> execute({int page = 1, String? category}) async {
-    final categoryFilter = category != null ? '&categories=$category' : '';
-    final response = await http.get(
-      Uri.parse(
-        'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page$categoryFilter',
-      ),
+  Future<int?> _getCategoryIdByName(String categoryName) async {
+    print(
+      'Debug: Iniciando _getCategoryIdByName para categoria: $categoryName',
     );
+    final response = await http.get(
+      Uri.parse('https://cinformonline.com.br/wp-json/wp/v2/categories'),
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> categoriesJson = json.decode(response.body);
+      for (var category in categoriesJson) {
+        if (category['name'] == categoryName) {
+          print(
+            'Debug: Categoria encontrada: ${category['name']}, ID: ${category['id']}',
+          );
+          return category['id'];
+        }
+      }
+      print(
+        'Debug: Categoria "$categoryName" NÃO ENCONTRADA na API de categorias.',
+      );
+      return null; // Categoria não encontrada
+    } else {
+      print(
+        'Debug: ERRO ao buscar categorias para encontrar ID de "$categoryName". Status code: ${response.statusCode}',
+      );
+      throw Exception(
+        'Failed to load categories: ${response.statusCode} ${response.reasonPhrase}',
+      );
+    }
+  }
+
+  Future<List<News>> execute({int page = 1, String? categoryName}) async {
+    int? categoryId;
+    if (categoryName != null) {
+      categoryId = await _getCategoryIdByName(categoryName);
+      if (categoryId == null) {
+        throw Exception('Category not found: $categoryName');
+      }
+    }
+    final categoryFilter = categoryId != null ? '&categories=$categoryId' : '';
+    final url =
+        'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page$categoryFilter';
+    print('Debug: URL da API de notícias (filtrada por categoria): $url');
+    final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final List<dynamic> newsJson = json.decode(response.body);
       return newsJson.map((json) => News.fromJson(json)).toList();

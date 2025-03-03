@@ -82,6 +82,7 @@ class NewsModel {
       content: content,
       date: date,
       imageUrl: imageUrl,
+      category: category,
     );
   }
 

@@ -4,6 +4,7 @@ class News {
   final String content;
   final String imageUrl;
   final DateTime date;
+  final String category;
 
   News({
     required this.id,
@@ -11,22 +12,29 @@ class News {
     required this.content,
     required this.imageUrl,
     required this.date,
+    required this.category,
   });
 
   factory News.fromJson(Map<String, dynamic> json) {
     return News(
       id: json['id'] as int,
-      title: json['title']['rendered'] as String,
-      content: json['content']['rendered'] as String,
+      title: json['title']['rendered'] as String? ?? '',
+      content: json['content']['rendered'] as String? ?? '',
       imageUrl:
-          json['_embedded']['wp:featuredmedia'][0]['source_url'] as String,
-      date: DateTime.parse(json['date'] as String),
+          json['_embedded']['wp:featuredmedia'] != null &&
+                  json['_embedded']['wp:featuredmedia'].isNotEmpty
+              ? json['_embedded']['wp:featuredmedia'][0]['source_url']
+                      as String? ??
+                  ''
+              : '',
+      date: DateTime.parse(json['date'] as String? ?? ''),
+      category: json['category'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'News{id: $id, title: $title, content: $content, imageUrl: $imageUrl, date: $date}';
+    return 'News{id: $id, title: $title, content: $content, imageUrl: $imageUrl, date: $date, category: $category}';
   }
 
   @override
@@ -38,7 +46,8 @@ class News {
           title == other.title &&
           content == other.content &&
           imageUrl == other.imageUrl &&
-          date == other.date;
+          date == other.date &&
+          category == other.category;
 
   @override
   int get hashCode =>
@@ -46,5 +55,6 @@ class News {
       title.hashCode ^
       content.hashCode ^
       imageUrl.hashCode ^
-      date.hashCode;
+      date.hashCode ^
+      category.hashCode;
 }
