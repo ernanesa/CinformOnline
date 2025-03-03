@@ -8,7 +8,7 @@ class AppTheme {
     appBarTheme: AppBarTheme(
       centerTitle: true,
       color: Colors.blue,
-      iconTheme: IconThemeData(color: Colors.black), // Cor para tema CLARO
+      iconTheme: IconThemeData(color: Color(0xFF152d71)), // Cor para tema CLARO
       titleTextStyle: TextStyle(
         color: Color(0xFF152d71),
         fontSize: 20.0,
@@ -81,7 +81,7 @@ class AppTheme {
         color: Colors.white,
       ),
     ),
-    iconTheme: IconThemeData(color: Colors.black, size: 24),
+    iconTheme: IconThemeData(color: Color(0xFF152d71), size: 24),
     // Add more customization as needed
   );
 
@@ -91,7 +91,9 @@ class AppTheme {
     appBarTheme: AppBarTheme(
       centerTitle: true,
       color: Colors.blueGrey,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(
+        color: Color(0xFF152d71),
+      ), // Cor para tema ESCURO
     ),
     buttonTheme: ButtonThemeData(
       buttonColor: Colors.blueGrey,
@@ -159,7 +161,7 @@ class AppTheme {
         color: Colors.white,
       ),
     ),
-    iconTheme: IconThemeData(color: Colors.white, size: 24),
+    iconTheme: IconThemeData(color: Color(0xFF152d71), size: 24),
     // Add more customization as needed
   );
 }
