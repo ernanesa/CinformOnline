@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'config/theme/app_theme.dart';
 import 'presentation/blocs/theme_bloc.dart';
 import 'core/network/api_client.dart';
@@ -12,7 +11,6 @@ import 'domain/usecases/get_news_list.dart';
 import 'presentation/blocs/news_list_bloc.dart';
 import 'presentation/pages/news_list_page.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'data/models/news_model.dart';
 import 'core/utils/logger.dart';
 import 'package:cinform_online/domain/usecases/get_categories.dart';
 import 'package:provider/provider.dart';
@@ -20,9 +18,6 @@ import 'core/utils/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(NewsModelAdapter());
-  await Hive.openBox<NewsModel>('newsBox');
 
   AppLogger.init();
 
