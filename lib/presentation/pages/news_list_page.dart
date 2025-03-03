@@ -6,8 +6,8 @@ import '../../domain/entities/news.dart';
 import 'news_detail_page.dart';
 import '../widgets/news_card.dart';
 import '../blocs/news_detail_cubit.dart';
-import 'news_search_delegate.dart';
-import 'settings_page.dart';
+import 'package:provider/provider.dart';
+import '../../core/utils/theme_provider.dart';
 
 class NewsListPage extends StatefulWidget {
   @override
@@ -51,6 +51,7 @@ class _NewsListPageState extends State<NewsListPage>
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return DefaultTabController(
       length: _categories.length,
       child: Scaffold(
@@ -58,18 +59,15 @@ class _NewsListPageState extends State<NewsListPage>
           title: Text('Cinform Online News'),
           actions: [
             IconButton(
-              icon: Icon(Icons.search), // ✅ SEM color: definido aqui
+              icon:
+                  themeProvider.isDarkMode
+                      ? Icon(Icons.light_mode)
+                      : Icon(Icons.dark_mode),
               onPressed: () {
-                showSearch(context: context, delegate: NewsSearchDelegate());
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.settings), // ✅ SEM color: definido aqui
-              onPressed: () {
-                Navigator.push(
+                Provider.of<ThemeProvider>(
                   context,
-                  MaterialPageRoute(builder: (context) => SettingsPage()),
-                );
+                  listen: false,
+                ).toggleTheme(!themeProvider.isDarkMode);
               },
             ),
           ],
