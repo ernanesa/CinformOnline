@@ -24,30 +24,19 @@ class NewsRepositoryImpl implements NewsRepository {
     String? categoryName,
   }) async {
     try {
-      final localNews = await localDataSource.getNews();
-      if (localNews.isNotEmpty) {
-        return Right(localNews.map((news) => news.toEntity()).toList());
-      }
+      final localNews =
+          await localDataSource.getNews(); // TENTAR LER DO CACHE LOCAL
+      return Right(
+        localNews.map((news) => news.toEntity()).toList(),
+      ); // RETORNAR SEMPRE DO CACHE (SE SUCESSO)
     } catch (e) {
+      // Erro ao acessar o cache local
       print(
-        'Warning: Error accessing local cache, proceeding to fetch from network: $e',
-      );
-    }
-    if (await networkInfo.isConnected) {
-      try {
-        final remoteNews = await remoteDataSource.getNewsList();
-        await localDataSource.saveNews(remoteNews);
-        return Right(remoteNews.map((news) => news.toEntity()).toList());
-      } catch (e) {
-        return Left(ServerFailure());
-      }
-    } else {
+        'Error accessing local cache: $e',
+      ); // MANTER OU REMOVER PRINT (OPCIONAL)
       return Left(
-        CacheFailure(
-          message:
-              'No internet connection and no cached data available. Please connect to the internet to load news.',
-        ),
-      );
+        CacheFailure(message: 'Failed to load news from local cache.'),
+      ); // ✅ RETORNAR CacheFailure SEMPRE EM CASO DE ERRO DE CACHE
     }
   }
 
