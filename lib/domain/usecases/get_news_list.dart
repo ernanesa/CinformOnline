@@ -1,7 +1,9 @@
+import 'package:dartz/dartz.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../entities/news.dart';
 import '../repositories/news_repository.dart';
+import '../../core/error/failures.dart';
 
 class GetNewsList {
   final NewsRepository repository;
@@ -39,26 +41,33 @@ class GetNewsList {
     }
   }
 
-  Future<List<News>> execute({int page = 1, String? categoryName}) async {
-    int? categoryId;
-    if (categoryName != null) {
-      categoryId = await _getCategoryIdByName(categoryName);
-      if (categoryId == null) {
-        throw Exception('Category not found: $categoryName');
+  Future<Either<Failure, List<News>>> execute({
+    int page = 1,
+    String? categoryName,
+  }) async {
+    try {
+      int? categoryId;
+      if (categoryName != null) {
+        categoryId = await _getCategoryIdByName(categoryName);
+        if (categoryId == null) {
+          return Left(ServerFailure());
+        }
       }
-    }
-    final categoryFilter = categoryId != null ? '&categories=$categoryId' : '';
-    final url =
-        'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page$categoryFilter';
-    print('Debug: URL da API de notícias (filtrada por categoria): $url');
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      final List<dynamic> newsJson = json.decode(response.body);
-      return newsJson.map((json) => News.fromJson(json)).toList();
-    } else {
-      throw Exception(
-        'Failed to load news: ${response.statusCode} ${response.reasonPhrase}',
-      );
+      final categoryFilter =
+          categoryId != null ? '&categories=$categoryId' : '';
+      final url =
+          'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page$categoryFilter';
+      print('Debug: URL da API de notícias (filtrada por categoria): $url');
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final List<dynamic> newsJson = json.decode(response.body);
+        final newsList = newsJson.map((json) => News.fromJson(json)).toList();
+        return Right(newsList);
+      } else {
+        return Left(ServerFailure());
+      }
+    } catch (e) {
+      return Left(ServerFailure());
     }
   }
 }
