@@ -87,79 +87,89 @@ class _NewsListPageState extends State<NewsListPage>
         ),
         body: TabBarView(
           controller: _tabController,
-          children: _categories.map((category) {
-            return BlocBuilder<NewsListBloc, NewsListState>(
-              builder: (context, state) {
-                if (state is NewsListLoading) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (state is NewsListLoaded) {
-                  _isFetching = false;
-                  final filteredNewsList = state.newsList;
-                  filteredNewsList.sort((a, b) => b.date.compareTo(a.date)); // Sort by date
-                  return LayoutBuilder(
-                    builder: (
-                      BuildContext context,
-                      BoxConstraints constraints,
-                    ) {
-                      if (constraints.maxWidth > 600) {
-                        return GridView.builder(
-                          controller: _scrollController,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.8,
-                          ),
-                          itemCount: filteredNewsList.length,
-                          itemBuilder: (context, index) {
-                            final News news = filteredNewsList[index];
-                            return NewsCard(
-                              news: news,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => BlocProvider(
-                                      create: (context) => NewsDetailCubit(news),
-                                      child: NewsDetailPage(),
-                                    ),
+          children:
+              _categories.map((category) {
+                return BlocBuilder<NewsListBloc, NewsListState>(
+                  builder: (context, state) {
+                    if (state is NewsListLoading) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (state is NewsListLoaded) {
+                      _isFetching = false;
+                      final filteredNewsList = state.newsList;
+                      filteredNewsList.sort(
+                        (a, b) => b.date.compareTo(a.date),
+                      ); // Sort by date
+                      return LayoutBuilder(
+                        builder: (
+                          BuildContext context,
+                          BoxConstraints constraints,
+                        ) {
+                          if (constraints.maxWidth > 600) {
+                            return GridView.builder(
+                              controller: _scrollController,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.8,
                                   ),
+                              itemCount: filteredNewsList.length,
+                              itemBuilder: (context, index) {
+                                final News news = filteredNewsList[index];
+                                return NewsCard(
+                                  news: news,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => BlocProvider(
+                                              create:
+                                                  (context) =>
+                                                      NewsDetailCubit(news),
+                                              child: NewsDetailPage(),
+                                            ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             );
-                          },
-                        );
-                      } else {
-                        return ListView.builder(
-                          controller: _scrollController,
-                          itemCount: filteredNewsList.length,
-                          itemBuilder: (context, index) {
-                            final News news = filteredNewsList[index];
-                            return NewsCard(
-                              news: news,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => BlocProvider(
-                                      create: (context) => NewsDetailCubit(news),
-                                      child: NewsDetailPage(),
-                                    ),
-                                  ),
+                          } else {
+                            return ListView.builder(
+                              controller: _scrollController,
+                              itemCount: filteredNewsList.length,
+                              itemBuilder: (context, index) {
+                                final News news = filteredNewsList[index];
+                                return NewsCard(
+                                  news: news,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => BlocProvider(
+                                              create:
+                                                  (context) =>
+                                                      NewsDetailCubit(news),
+                                              child: NewsDetailPage(),
+                                            ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             );
-                          },
-                        );
-                      }
-                    },
-                  );
-                } else if (state is NewsListError) {
-                  return Center(child: Text('Error: ${state.message}'));
-                } else {
-                  return Center(child: Text('No news loaded'));
-                }
-              },
-            );
-          }).toList(),
+                          }
+                        },
+                      );
+                    } else if (state is NewsListError) {
+                      return Center(child: Text('Error: ${state.message}'));
+                    } else {
+                      return Center(child: Text('No news loaded'));
+                    }
+                  },
+                );
+              }).toList(),
         ),
       ),
     );
