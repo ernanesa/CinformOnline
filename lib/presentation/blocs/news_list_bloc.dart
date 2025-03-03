@@ -66,20 +66,23 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
                 'Erro ao carregar a lista de notícias: ' + failure.toString(),
           ),
         ),
-        (newsList) => emit(NewsListLoaded(newsList: newsList)),
+        (newsList) {
+          newsList.sort((a, b) => b.date.compareTo(a.date)); // Sort by date
+          emit(NewsListLoaded(newsList: newsList));
+        },
       );
     });
 
     on<LoadMoreNews>((event, emit) async {
       if (state is NewsListLoaded) {
         try {
-          final result = await getNewsList.execute(
-            page: event.page,
-          );
+          final result = await getNewsList.execute(page: event.page);
           result.fold(
             (failure) => emit(
               NewsListError(
-                message: 'Erro ao carregar a lista de notícias: ' + failure.toString(),
+                message:
+                    'Erro ao carregar a lista de notícias: ' +
+                    failure.toString(),
               ),
             ),
             (moreNews) {
@@ -108,16 +111,20 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
     on<FilterNewsByCategory>((event, emit) async {
       emit(NewsListLoading());
       try {
-        final result = await getNewsList.execute(
-          categoryName: event.category,
-        );
+        final result = await getNewsList.execute(categoryName: event.category);
         result.fold(
           (failure) => emit(
             NewsListError(
-              message: 'Erro ao filtrar a lista de notícias: ' + failure.toString(),
+              message:
+                  'Erro ao filtrar a lista de notícias: ' + failure.toString(),
             ),
           ),
-          (filteredNewsList) => emit(NewsListLoaded(newsList: filteredNewsList)),
+          (filteredNewsList) {
+            filteredNewsList.sort(
+              (a, b) => b.date.compareTo(a.date),
+            ); // Sort by date
+            emit(NewsListLoaded(newsList: filteredNewsList));
+          },
         );
       } catch (e) {
         emit(

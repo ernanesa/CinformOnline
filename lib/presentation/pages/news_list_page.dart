@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async';
 import '../blocs/news_list_bloc.dart';
 import '../../domain/entities/news.dart';
 import 'news_detail_page.dart';
@@ -53,13 +54,13 @@ class _NewsListPageState extends State<NewsListPage>
           title: Text('Cinform Online News'),
           actions: [
             IconButton(
-              icon: Icon(Icons.search),
+              icon: Icon(Icons.search), // ✅ SEM color: definido aqui
               onPressed: () {
                 showSearch(context: context, delegate: NewsSearchDelegate());
               },
             ),
             IconButton(
-              icon: Icon(Icons.settings),
+              icon: Icon(Icons.settings), // ✅ SEM color: definido aqui
               onPressed: () {
                 Navigator.push(
                   context,
@@ -96,71 +97,79 @@ class _NewsListPageState extends State<NewsListPage>
                     } else if (state is NewsListLoaded) {
                       _isFetching = false;
                       final filteredNewsList = state.newsList;
-                      filteredNewsList.sort(
-                        (a, b) => b.date.compareTo(a.date),
-                      ); // Sort by date
-                      return LayoutBuilder(
-                        builder: (
-                          BuildContext context,
-                          BoxConstraints constraints,
-                        ) {
-                          if (constraints.maxWidth > 600) {
-                            return GridView.builder(
-                              controller: _scrollController,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    childAspectRatio: 0.8,
-                                  ),
-                              itemCount: filteredNewsList.length,
-                              itemBuilder: (context, index) {
-                                final News news = filteredNewsList[index];
-                                return NewsCard(
-                                  news: news,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => BlocProvider(
-                                              create:
-                                                  (context) =>
-                                                      NewsDetailCubit(news),
-                                              child: NewsDetailPage(),
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          } else {
-                            return ListView.builder(
-                              controller: _scrollController,
-                              itemCount: filteredNewsList.length,
-                              itemBuilder: (context, index) {
-                                final News news = filteredNewsList[index];
-                                return NewsCard(
-                                  news: news,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => BlocProvider(
-                                              create:
-                                                  (context) =>
-                                                      NewsDetailCubit(news),
-                                              child: NewsDetailPage(),
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          }
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          final Completer<void> completer = Completer<void>();
+                          BlocProvider.of<NewsListBloc>(
+                            context,
+                          ).add(LoadNewsList());
+                          await Future.delayed(Duration(seconds: 1));
+                          completer.complete();
+                          return completer.future;
                         },
+                        child: LayoutBuilder(
+                          builder: (
+                            BuildContext context,
+                            BoxConstraints constraints,
+                          ) {
+                            if (constraints.maxWidth > 600) {
+                              return GridView.builder(
+                                controller: _scrollController,
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio: 0.8,
+                                    ),
+                                itemCount: filteredNewsList.length,
+                                itemBuilder: (context, index) {
+                                  final News news = filteredNewsList[index];
+                                  return NewsCard(
+                                    news: news,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => BlocProvider(
+                                                create:
+                                                    (context) =>
+                                                        NewsDetailCubit(news),
+                                                child: NewsDetailPage(),
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            } else {
+                              return ListView.builder(
+                                controller: _scrollController,
+                                itemCount: filteredNewsList.length,
+                                itemBuilder: (context, index) {
+                                  final News news = filteredNewsList[index];
+                                  return NewsCard(
+                                    news: news,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => BlocProvider(
+                                                create:
+                                                    (context) =>
+                                                        NewsDetailCubit(news),
+                                                child: NewsDetailPage(),
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            }
+                          },
+                        ),
                       );
                     } else if (state is NewsListError) {
                       return Center(child: Text('Error: ${state.message}'));
