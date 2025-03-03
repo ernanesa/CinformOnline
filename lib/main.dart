@@ -14,6 +14,7 @@ import 'core/utils/logger.dart';
 import 'package:cinform_online/domain/usecases/get_categories.dart';
 import 'package:provider/provider.dart';
 import 'core/utils/theme_provider.dart';
+import 'package:cinform_online/presentation/widgets/custom_splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.currentTheme,
           home: NewsHomePage(),
+          // CustomSplashScreen(), // Set CustomSplashScreen as the home screen
         );
       },
     );

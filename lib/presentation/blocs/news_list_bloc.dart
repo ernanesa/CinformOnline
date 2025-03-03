@@ -8,7 +8,8 @@ abstract class NewsListEvent {}
 
 class LoadNewsList extends NewsListEvent {
   final int page;
-  LoadNewsList({this.page = 1});
+  final String? categoryName; // Add categoryName parameter
+  LoadNewsList({this.page = 1, this.categoryName}); // Update constructor
 }
 
 class LoadMoreNews extends NewsListEvent {
@@ -67,7 +68,31 @@ class NewsListBloc extends Bloc<NewsListEvent, NewsListState> {
           ),
         ),
         (newsList) {
-          emit(NewsListLoaded(newsList: newsList));
+          List<News> filteredNewsList =
+              newsList; // Inicialmente, usar a lista completa
+
+          if (event.categoryName == 'Brasil') {
+            // ✅ FILTRAR PARA "Brasil"
+            filteredNewsList =
+                newsList.where((news) {
+                  final textLower = (news.title + news.content).toLowerCase();
+                  return textLower.contains('brasil') ||
+                      textLower.contains('brazil');
+                }).toList();
+          } else if (event.categoryName == 'Aracaju') {
+            // ✅ FILTRAR PARA "Aracaju"
+            filteredNewsList =
+                newsList.where((news) {
+                  final textLower = (news.title + news.content).toLowerCase();
+                  return textLower.contains('aracaju') ||
+                      textLower.contains('sergipe');
+                }).toList();
+          }
+          // SE categoryName for null ou "Últimas Notícias", filteredNewsList será a lista completa (sem filtro)
+
+          emit(
+            NewsListLoaded(newsList: filteredNewsList),
+          ); // ✅ EMITIR ESTADO COM LISTA FILTRADA (OU COMPLETA)
         },
       );
     });

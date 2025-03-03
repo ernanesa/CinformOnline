@@ -9,6 +9,11 @@ class AppTheme {
       centerTitle: true,
       color: Colors.blue,
       iconTheme: IconThemeData(color: Colors.black), // Cor para tema CLARO
+      titleTextStyle: TextStyle(
+        color: Color(0xFF152d71),
+        fontSize: 20.0,
+        fontWeight: FontWeight.bold,
+      ),
     ),
     buttonTheme: ButtonThemeData(
       buttonColor: Colors.blue,
@@ -16,39 +21,39 @@ class AppTheme {
     ),
     textTheme: TextTheme(
       displayLarge: GoogleFonts.roboto(
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: FontWeight.bold,
         color: Colors.black,
       ),
       displayMedium: GoogleFonts.roboto(
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: FontWeight.bold,
         color: Colors.black,
       ),
       displaySmall: GoogleFonts.roboto(
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: FontWeight.bold,
         color: Colors.black,
       ),
       headlineMedium: GoogleFonts.roboto(
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: FontWeight.bold,
         color: Colors.black,
       ),
       headlineSmall: GoogleFonts.roboto(
-        fontSize: 16,
+        fontSize: 20,
         fontWeight: FontWeight.bold,
         color: Colors.black,
       ),
       titleLarge: GoogleFonts.roboto(
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: FontWeight.bold,
         color: Colors.black,
       ),
       titleMedium: GoogleFonts.roboto(
         fontSize: 16,
         fontWeight: FontWeight.w500,
-        color: Colors.black,
+        color: Color(0xFF152d71),
       ),
       titleSmall: GoogleFonts.roboto(
         fontSize: 14,
@@ -76,6 +81,7 @@ class AppTheme {
         color: Colors.white,
       ),
     ),
+    iconTheme: IconThemeData(color: Colors.black, size: 24),
     // Add more customization as needed
   );
 
@@ -85,7 +91,7 @@ class AppTheme {
     appBarTheme: AppBarTheme(
       centerTitle: true,
       color: Colors.blueGrey,
-      iconTheme: IconThemeData(color: Colors.white), // Cor para tema ESCURO
+      iconTheme: IconThemeData(color: Colors.white),
     ),
     buttonTheme: ButtonThemeData(
       buttonColor: Colors.blueGrey,
@@ -93,32 +99,32 @@ class AppTheme {
     ),
     textTheme: TextTheme(
       displayLarge: GoogleFonts.roboto(
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
       displayMedium: GoogleFonts.roboto(
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
       displaySmall: GoogleFonts.roboto(
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
       headlineMedium: GoogleFonts.roboto(
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
       headlineSmall: GoogleFonts.roboto(
-        fontSize: 16,
+        fontSize: 20,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
       titleLarge: GoogleFonts.roboto(
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
@@ -153,6 +159,7 @@ class AppTheme {
         color: Colors.white,
       ),
     ),
+    iconTheme: IconThemeData(color: Colors.white, size: 24),
     // Add more customization as needed
   );
 }
