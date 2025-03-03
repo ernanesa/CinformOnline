@@ -56,7 +56,10 @@ class _NewsListPageState extends State<NewsListPage>
       length: _categories.length,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Cinform Online News'),
+          title: Text(
+            'Cinform Online News',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           actions: [
             IconButton(
               icon:
@@ -73,17 +76,36 @@ class _NewsListPageState extends State<NewsListPage>
           ],
           bottom: TabBar(
             controller: _tabController,
-            tabs: _categories.map((category) => Tab(text: category)).toList(),
+            isScrollable: true, // Ensure tabs are scrollable
+            tabs:
+                _categories
+                    .map(
+                      (category) => Tab(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                          ), // Add horizontal padding to tabs
+                          child: Text(category),
+                        ),
+                      ),
+                    )
+                    .toList(),
+            labelStyle: Theme.of(context).textTheme.titleMedium,
+            unselectedLabelStyle: Theme.of(context).textTheme.bodyMedium,
+            indicator: UnderlineTabIndicator(
+              borderSide: BorderSide(
+                color: Theme.of(context).primaryColor,
+                width: 2.0,
+              ),
+            ),
             onTap: (index) {
               String selectedCategoryName = _categories[index];
               if (selectedCategoryName == 'Últimas Notícias') {
+                BlocProvider.of<NewsListBloc>(context).add(LoadNewsList());
+              } else {
                 BlocProvider.of<NewsListBloc>(
                   context,
-                ).add(LoadNewsList()); // Load all news
-              } else {
-                BlocProvider.of<NewsListBloc>(context).add(
-                  FilterNewsByCategory(selectedCategoryName),
-                ); // Filter by category
+                ).add(FilterNewsByCategory(selectedCategoryName));
               }
             },
           ),
@@ -147,6 +169,7 @@ class _NewsListPageState extends State<NewsListPage>
                             } else {
                               return ListView.builder(
                                 controller: _scrollController,
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
                                 itemCount: filteredNewsList.length,
                                 itemBuilder: (context, index) {
                                   final News news = filteredNewsList[index];

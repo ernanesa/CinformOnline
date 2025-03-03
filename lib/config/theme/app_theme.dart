@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
-    primaryColor: Colors.blue,
+    primaryColor: Colors.blue[900],
     appBarTheme: AppBarTheme(
       centerTitle: true,
       color: Colors.blue,
@@ -14,8 +15,66 @@ class AppTheme {
       textTheme: ButtonTextTheme.primary,
     ),
     textTheme: TextTheme(
-      bodyLarge: TextStyle(color: Colors.black),
-      bodyMedium: TextStyle(color: Colors.black54),
+      displayLarge: GoogleFonts.roboto(
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+      displayMedium: GoogleFonts.roboto(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+      displaySmall: GoogleFonts.roboto(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+      headlineMedium: GoogleFonts.roboto(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+      headlineSmall: GoogleFonts.roboto(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+      titleLarge: GoogleFonts.roboto(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+      titleMedium: GoogleFonts.roboto(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      titleSmall: GoogleFonts.roboto(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      bodyLarge: GoogleFonts.roboto(
+        fontSize: 16,
+        fontWeight: FontWeight.normal,
+        color: Colors.black,
+      ),
+      bodyMedium: GoogleFonts.roboto(
+        fontSize: 14,
+        fontWeight: FontWeight.normal,
+        color: Colors.black,
+      ),
+      bodySmall: GoogleFonts.roboto(
+        fontSize: 12,
+        fontWeight: FontWeight.normal,
+        color: Colors.grey,
+      ),
+      labelLarge: GoogleFonts.roboto(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.white,
+      ),
     ),
     // Add more customization as needed
   );
@@ -33,8 +92,66 @@ class AppTheme {
       textTheme: ButtonTextTheme.primary,
     ),
     textTheme: TextTheme(
-      bodyLarge: TextStyle(color: Colors.white),
-      bodyMedium: TextStyle(color: Colors.white70),
+      displayLarge: GoogleFonts.roboto(
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+      displayMedium: GoogleFonts.roboto(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+      displaySmall: GoogleFonts.roboto(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+      headlineMedium: GoogleFonts.roboto(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+      headlineSmall: GoogleFonts.roboto(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+      titleLarge: GoogleFonts.roboto(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+      titleMedium: GoogleFonts.roboto(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: Colors.white,
+      ),
+      titleSmall: GoogleFonts.roboto(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.white,
+      ),
+      bodyLarge: GoogleFonts.roboto(
+        fontSize: 16,
+        fontWeight: FontWeight.normal,
+        color: Colors.white,
+      ),
+      bodyMedium: GoogleFonts.roboto(
+        fontSize: 14,
+        fontWeight: FontWeight.normal,
+        color: Colors.white,
+      ),
+      bodySmall: GoogleFonts.roboto(
+        fontSize: 12,
+        fontWeight: FontWeight.normal,
+        color: Colors.grey,
+      ),
+      labelLarge: GoogleFonts.roboto(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.white,
+      ),
     ),
     // Add more customization as needed
   );
