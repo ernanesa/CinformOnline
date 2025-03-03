@@ -1,24 +1,13 @@
-import 'package:hive/hive.dart';
 import 'package:html_unescape/html_unescape.dart';
 import '../../domain/entities/news.dart';
 
-part 'news_model.g.dart'; // Este arquivo será gerado
-
-@HiveType(typeId: 0) // Use um ID único para cada tipo
 class NewsModel {
-  @HiveField(0)
   final int id;
-  @HiveField(1)
   final String title;
-  @HiveField(2)
   final String content;
-  @HiveField(3)
   final DateTime date;
-  @HiveField(4)
   final String imageUrl;
-  @HiveField(5)
   final String? imagePath;
-  @HiveField(6)
   final String category;
 
   NewsModel({
