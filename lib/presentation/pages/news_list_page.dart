@@ -38,10 +38,14 @@ class _NewsListPageState extends State<NewsListPage>
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
+            _scrollController.position.maxScrollExtent - 750 &&
         !_isFetching) {
       _isFetching = true;
-      BlocProvider.of<NewsListBloc>(context).add(LoadMoreNews());
+      BlocProvider.of<NewsListBloc>(context).add(
+        LoadMoreNews(
+          page: ++BlocProvider.of<NewsListBloc>(context).currentPage,
+        ),
+      );
     }
   }
 

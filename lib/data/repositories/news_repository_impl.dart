@@ -24,32 +24,24 @@ class NewsRepositoryImpl implements NewsRepository {
     String? categoryName,
   }) async {
     try {
-      final localNews =
-          await localDataSource.getNews(); // TENTAR LER DO CACHE PRIMEIRO
+      final localNews = await localDataSource.getNews();
       if (localNews.isNotEmpty) {
-        // SE CACHE NÃO ESTÁ VAZIO, RETORNAR CACHE
         return Right(localNews.map((news) => news.toEntity()).toList());
       }
     } catch (e) {
-      // Erro ao acessar o cache (ignorar e tentar buscar da rede)
       print(
         'Warning: Error accessing local cache, proceeding to fetch from network: $e',
       );
     }
-
-    // CACHE VAZIO OU ERRO AO ACESSAR CACHE, TENTAR BUSCAR DA API REMOTA
     if (await networkInfo.isConnected) {
       try {
         final remoteNews = await remoteDataSource.getNewsList();
-        await localDataSource.saveNews(
-          remoteNews,
-        ); // SALVAR NO CACHE APÓS BUSCAR DA API
+        await localDataSource.saveNews(remoteNews);
         return Right(remoteNews.map((news) => news.toEntity()).toList());
       } catch (e) {
         return Left(ServerFailure());
       }
     } else {
-      // Se não há rede E cache está vazio (ou falhou), retornar falha de cache
       return Left(
         CacheFailure(
           message:

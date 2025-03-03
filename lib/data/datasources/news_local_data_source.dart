@@ -30,10 +30,17 @@ class NewsLocalDataSource {
 
   Future<void> saveNews(List<NewsModel> newsList) async {
     final db = await database;
+    List<Future<String>> imageDownloadFutures = [];
+
+    for (var news in newsList) {
+      imageDownloadFutures.add(_downloadImage(news.imageUrl));
+    }
+
+    final List<String> imagePaths = await Future.wait(imageDownloadFutures);
+
     await db.transaction((txn) async {
-      for (var news in newsList) {
-        final imagePath = await _downloadImage(news.imageUrl);
-        final updatedNews = news.copyWith(imagePath: imagePath);
+      for (int i = 0; i < newsList.length; i++) {
+        final updatedNews = newsList[i].copyWith(imagePath: imagePaths[i]);
         await txn.insert(
           'news',
           updatedNews.toJson(),
