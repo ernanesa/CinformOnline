@@ -34,7 +34,12 @@ class NewsCard extends StatelessWidget {
                   width: double.infinity,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => CircularProgressIndicator(),
-                  errorWidget: (context, url, error) => Icon(Icons.error),
+                  errorWidget:
+                      (context, url, error) => Icon(
+                        Icons.error,
+                        color: Theme.of(context).iconTheme.color,
+                        size: Theme.of(context).iconTheme.size,
+                      ),
                 ),
               ),
               SizedBox(height: 8.0),

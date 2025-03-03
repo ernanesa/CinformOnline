@@ -58,14 +58,24 @@ class _NewsListPageState extends State<NewsListPage>
         appBar: AppBar(
           title: Text(
             'Cinform Online News',
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(color: Color(0xFF152D71)),
           ),
           actions: [
             IconButton(
               icon:
                   themeProvider.isDarkMode
-                      ? Icon(Icons.light_mode)
-                      : Icon(Icons.dark_mode),
+                      ? Icon(
+                        Icons.light_mode,
+                        color: Theme.of(context).iconTheme.color,
+                        size: Theme.of(context).iconTheme.size,
+                      )
+                      : Icon(
+                        Icons.dark_mode,
+                        color: Theme.of(context).iconTheme.color,
+                        size: Theme.of(context).iconTheme.size,
+                      ),
               onPressed: () {
                 Provider.of<ThemeProvider>(
                   context,
@@ -85,7 +95,10 @@ class _NewsListPageState extends State<NewsListPage>
                           padding: EdgeInsets.symmetric(
                             horizontal: 16.0,
                           ), // Add horizontal padding to tabs
-                          child: Text(category),
+                          child: Text(
+                            category,
+                            style: TextStyle(color: Color(0xFF152D71)),
+                          ),
                         ),
                       ),
                     )
@@ -121,24 +134,22 @@ class _NewsListPageState extends State<NewsListPage>
                     } else if (state is NewsListLoaded) {
                       _isFetching = false;
                       final filteredNewsList = state.newsList;
-                      final currentCategoryIndex =
-                          _tabController.index; // ✅ OBTER ÍNDICE DA ABA ATIVA
-                      final selectedCategoryName =
-                          _categories[currentCategoryIndex]; // ✅ OBTER NOME DA CATEGORIA ATIVA
-
                       return RefreshIndicator(
                         onRefresh: () async {
                           final Completer<void> completer = Completer<void>();
+                          final selectedCategoryName =
+                              _categories[_tabController.index];
+
                           if (selectedCategoryName == 'Últimas Notícias') {
-                            // ✅ CONDICIONAL PARA DESPACHAR EVENTO CORRETO
-                            BlocProvider.of<NewsListBloc>(context).add(
-                              LoadNewsList(),
-                            ); // ✅ CARREGAR TODAS AS NOTÍCIAS PARA "Últimas Notícias"
+                            BlocProvider.of<NewsListBloc>(
+                              context,
+                            ).add(LoadNewsList());
                           } else {
                             BlocProvider.of<NewsListBloc>(context).add(
-                              FilterNewsByCategory(selectedCategoryName),
-                            ); // ✅ FILTRAR POR CATEGORIA PARA "Brasil" e "Aracaju"
+                              LoadNewsList(categoryName: selectedCategoryName),
+                            );
                           }
+
                           await Future.delayed(Duration(seconds: 1));
                           completer.complete();
                           return completer.future;
