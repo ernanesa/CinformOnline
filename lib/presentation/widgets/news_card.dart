@@ -8,6 +8,7 @@ import '../../domain/entities/news.dart';
 class NewsCard extends StatelessWidget {
   final News news;
   final VoidCallback onTap;
+
   NewsCard({required this.news, required this.onTap});
 
   @override
@@ -16,6 +17,8 @@ class NewsCard extends StatelessWidget {
     final formattedDate = DateFormat.yMMMd('pt_BR').format(news.date);
     return Card(
       margin: EdgeInsets.all(8.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      elevation: 1,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -24,7 +27,7 @@ class NewsCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(6.0),
+                borderRadius: BorderRadius.circular(12.0),
                 child: CachedNetworkImage(
                   imageUrl: news.imageUrl,
                   height: 200,
@@ -37,16 +40,10 @@ class NewsCard extends StatelessWidget {
               SizedBox(height: 8.0),
               HtmlWidget(
                 news.title,
-                textStyle: TextStyle(
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.bold,
-                ),
+                textStyle: Theme.of(context).textTheme.titleMedium,
               ),
               SizedBox(height: 4.0),
-              Text(
-                formattedDate,
-                style: TextStyle(fontSize: 12.0, color: Colors.grey),
-              ),
+              Text(formattedDate, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
