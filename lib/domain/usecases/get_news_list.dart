@@ -18,37 +18,43 @@ class GetNewsList {
     print(
       'Debug: Iniciando _getCategoryIdByName para categoria: $categoryName',
     );
-    final response = await http.get(
-      Uri.parse('https://cinformonline.com.br/wp-json/wp/v2/categories'),
-    );
-    if (response.statusCode == 200) {
-      final List<dynamic> categoriesJson = json.decode(response.body);
-      for (var category in categoriesJson) {
-        if (category['name'] == categoryName) {
-          print(
-            'Debug: Categoria encontrada: ${category['name']}, ID: ${category['id']}',
-          );
-          _categoryCache[categoryName] = category['id'];
-          return category['id'];
+    try {
+      final response = await http.get(
+        Uri.parse('https://cinformonline.com.br/wp-json/wp/v2/categories'),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> categoriesJson = json.decode(response.body);
+        for (var category in categoriesJson) {
+          if (category['name'] == categoryName) {
+            print(
+              'Debug: Categoria encontrada: ${category['name']}, ID: ${category['id']}',
+            );
+            _categoryCache[categoryName] = category['id'];
+            return category['id'];
+          }
         }
+        print(
+          'Debug: Categoria "$categoryName" NÃO ENCONTRADA na API de categorias.',
+        );
+        return null; // Categoria não encontrada
+      } else {
+        print(
+          'Debug: ERRO ao buscar categorias para encontrar ID de "$categoryName". Status code: ${response.statusCode}',
+        );
+        throw Exception(
+          'Failed to load categories: ${response.statusCode} ${response.reasonPhrase}',
+        );
       }
-      print(
-        'Debug: Categoria "$categoryName" NÃO ENCONTRADA na API de categorias.',
-      );
-      return null; // Categoria não encontrada
-    } else {
-      print(
-        'Debug: ERRO ao buscar categorias para encontrar ID de "$categoryName". Status code: ${response.statusCode}',
-      );
-      throw Exception(
-        'Failed to load categories: ${response.statusCode} ${response.reasonPhrase}',
-      );
+    } catch (e) {
+      print('Debug: ERRO GERAL em _getCategoryIdByName: $e');
+      return null; // Categoria não encontrada devido a erro
     }
   }
 
   Future<Either<Failure, List<News>>> execute({
     int page = 1,
     String? categoryName,
+    int perPage = 20, // Added perPage parameter with a default value of 20
   }) async {
     try {
       int? categoryId;
@@ -61,7 +67,7 @@ class GetNewsList {
       final categoryFilter =
           categoryId != null ? '&categories=$categoryId' : '';
       final url =
-          'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page$categoryFilter';
+          'https://cinformonline.com.br/wp-json/wp/v2/posts?_embed&orderby=date&order=desc&page=$page&per_page=$perPage$categoryFilter'; // Added per_page parameter to the URL
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> newsJson = json.decode(response.body);
