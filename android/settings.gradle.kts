@@ -22,4 +22,16 @@ plugins {
     id("org.jetbrains.kotlin.android") version "1.8.22" apply false
 }
 
+// dependencyResolutionManagement {
+//   repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+//   repositories {
+//     google()
+//     mavenCentral()
+//   }
+// }
+
+// dependencies {
+//   implementation("com.google.android.gms:play-services-ads:24.0.0")
+// }
+
 include(":app")
