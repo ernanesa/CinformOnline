@@ -14,11 +14,11 @@ import 'core/utils/logger.dart';
 import 'package:cinform_online/domain/usecases/get_categories.dart';
 import 'package:provider/provider.dart';
 import 'core/utils/theme_provider.dart';
-import 'package:cinform_online/presentation/widgets/custom_splash_screen.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  MobileAds.instance.initialize(); // Inicialize o SDK do AdMob
   AppLogger.init();
 
   final apiClient = ApiClient();
@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.currentTheme,
           home: NewsHomePage(),
-          // CustomSplashScreen(), // Set CustomSplashScreen as the home screen
+          // CustomSplashScreen(), // Defina CustomSplashScreen como a tela inicial
         );
       },
     );
@@ -71,7 +71,7 @@ class NewsHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Removed the AppBar to avoid duplication
+      // Removido o AppBar para evitar duplicação
       body: NewsListPage(),
     );
   }

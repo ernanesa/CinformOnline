@@ -13,7 +13,7 @@ class NewsDetailPage extends StatelessWidget {
     initializeDateFormatting('pt_BR', null);
     final formattedDate = DateFormat.yMMMd('pt_BR').format(news.date);
     return Scaffold(
-      appBar: AppBar(title: Text('Notícias Cinform Online'), centerTitle: true),
+      appBar: AppBar(title: Text('Cinform Online News'), centerTitle: true),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(

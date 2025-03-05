@@ -10,7 +10,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Simulate a delay for the splash screen
+    // Simula um atraso para a tela de splash
     Future.delayed(Duration(seconds: 3), () {
       Navigator.pushReplacementNamed(context, '/home');
     });
@@ -19,7 +19,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Background color
+      backgroundColor: Colors.white, // Cor de fundo
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -34,7 +34,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen> {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 10),
-            // Optional subtitle
+            // Subtítulo opcional
             // Text(
             //   'Seu Jornal de Notícias',
             //   style: GoogleFonts.roboto(
@@ -45,7 +45,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen> {
             //   textAlign: TextAlign.center,
             // ),
             // SizedBox(height: 20),
-            // Optional loading indicator
+            // Indicador de carregamento opcional
             // CircularProgressIndicator(),
           ],
         ),

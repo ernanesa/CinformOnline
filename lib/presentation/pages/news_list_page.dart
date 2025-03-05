@@ -8,6 +8,8 @@ import '../widgets/news_card.dart';
 import '../blocs/news_detail_cubit.dart';
 import 'package:provider/provider.dart';
 import '../../core/utils/theme_provider.dart';
+import '../widgets/banner_ad_widget.dart'; // Importe o BannerAdWidget
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class NewsListPage extends StatefulWidget {
   @override
@@ -18,22 +20,72 @@ class _NewsListPageState extends State<NewsListPage>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   bool _isFetching = false;
+  InterstitialAd? _interstitialAd;
+  bool _isInterstitialAdReady = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
     _loadInitialNews();
+    _loadInterstitialAd(); // Pré-carrega o Interstitial Ad ao iniciar a tela
   }
 
   void _loadInitialNews() {
     BlocProvider.of<NewsListBloc>(context).add(LoadNewsList());
   }
 
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: 'ca-app-pub-9691622617864549/7578796058',
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _isInterstitialAdReady = true;
+          _interstitialAd!
+              .fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (InterstitialAd ad) {
+              _interstitialAd?.dispose();
+              _interstitialAd = null;
+              _isInterstitialAdReady = false;
+              _loadInterstitialAd(); // Pré-carrega o próximo anúncio
+            },
+            onAdFailedToShowFullScreenContent: (
+              InterstitialAd ad,
+              AdError error,
+            ) {
+              print('Falha ao exibir anúncio em tela cheia: ${error.message}');
+              _interstitialAd?.dispose();
+              _interstitialAd = null;
+              _isInterstitialAdReady = false;
+              _loadInterstitialAd(); // Tenta pré-carregar novamente
+            },
+          );
+          print('Anúncio Intersticial carregado');
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Falha ao carregar anúncio Intersticial: $error');
+          _interstitialAd = null;
+          _isInterstitialAdReady = false;
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_isInterstitialAdReady && _interstitialAd != null) {
+      _interstitialAd!.show();
+    } else {
+      print('Anúncio intersticial ainda não está pronto.');
+    }
+  }
+
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _interstitialAd?.dispose();
     super.dispose();
   }
 
@@ -115,6 +167,7 @@ class _NewsListPageState extends State<NewsListPage>
                         return NewsCard(
                           news: news,
                           onTap: () {
+                            _showInterstitialAd(); // Exibe o Interstitial antes de navegar para a tela de detalhes
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -140,6 +193,7 @@ class _NewsListPageState extends State<NewsListPage>
                         return NewsCard(
                           news: news,
                           onTap: () {
+                            _showInterstitialAd(); // Exibe o Interstitial antes de navegar para a tela de detalhes
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -160,11 +214,16 @@ class _NewsListPageState extends State<NewsListPage>
               ),
             );
           } else if (state is NewsListError) {
-            return Center(child: Text('Error: ${state.message}'));
+            return Center(child: Text('Erro: ${state.message}'));
           } else {
-            return Center(child: Text('No news loaded'));
+            return Center(child: Text('Nenhuma notícia carregada'));
           }
         },
+      ),
+      bottomNavigationBar: BannerAdWidget(
+        // Adicione o BannerAdWidget aqui
+        adUnitId:
+            'YOUR_BANNER_AD_UNIT_ID', // Substitua pelo SEU ID DO BLOCO DE ANÚNCIO BANNER
       ),
     );
   }
