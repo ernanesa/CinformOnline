@@ -1,11 +1,11 @@
-import 'package:cinform_online/core/error/failures.dart';
+import 'package:cinform_online_news/core/error/failures.dart';
 import 'package:dartz/dartz.dart';
 import '../../domain/entities/news.dart';
 import '../../domain/repositories/news_repository.dart';
 import '../datasources/news_local_data_source.dart';
 import '../datasources/news_remote_data_source.dart';
 import '../models/news_model.dart';
-import 'package:cinform_online/core/network/network_info.dart';
+import 'package:cinform_online_news/core/network/network_info.dart';
 
 class NewsRepositoryImpl implements NewsRepository {
   final NewsRemoteDataSource remoteDataSource;

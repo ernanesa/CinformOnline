@@ -11,7 +11,7 @@ import 'presentation/blocs/news_list_bloc.dart';
 import 'presentation/pages/news_list_page.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'core/utils/logger.dart';
-import 'package:cinform_online/domain/usecases/get_categories.dart';
+import 'package:cinform_online_news/domain/usecases/get_categories.dart';
 import 'package:provider/provider.dart';
 import 'core/utils/theme_provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';

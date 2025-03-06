@@ -1,5 +1,5 @@
-import 'package:cinform_online/core/network/api_client.dart';
-import 'package:cinform_online/data/models/news_model.dart';
+import 'package:cinform_online_news/core/network/api_client.dart';
+import 'package:cinform_online_news/data/models/news_model.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 

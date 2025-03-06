@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cinform_online/config/theme/app_theme.dart';
+import 'package:cinform_online_news/config/theme/app_theme.dart';
 
 // Eventos
 abstract class ThemeEvent {}
