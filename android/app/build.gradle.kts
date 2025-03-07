@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,9 +8,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "sa.rezende.cinform_online_news"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34 // Define compileSdkVersion explicitly
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -24,16 +33,26 @@ android {
         applicationId = "sa.rezende.cinform_online_news"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdk = 21 // Define minSdkVersion explicitly
+        targetSdk = 34 // Define targetSdkVersion explicitly
+        versionCode = 1 // Define versionCode explicitly
+        versionName = "1.0.0" // Define versionName explicitly
+    }
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
     }
 
     buildTypes {
-        release {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
             // Add your own signing config for the release build.
-            signingConfig = signingConfigs.getByName("debug")
+            // signingConfig = signingConfigs.getByName("debug")
             //  signingConfig = signingConfigs.create("release") {
             //     keyAlias = "your-key-alias"
             //     keyPassword = "your-key-password"
